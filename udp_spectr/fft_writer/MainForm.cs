@@ -63,8 +63,9 @@ namespace fft_writer
 		static int  BUF_N= 64000;
 		static int Fsample=12;
 
-		Byte  [] RCV         =new byte[64000];
-		int   [] FFT_array   =new int [64000];
+		Byte  [] RCV_0         =new byte[64000];
+        Byte[] RCV_1 = new byte[64000];
+        int   [] FFT_array   =new int [64000];
 	    int   [] packet_data =new int [64000];
         int   [] packet_data_i = new int [64000];
         int   [] packet_data_q = new int [64000];
@@ -178,7 +179,7 @@ namespace fft_writer
 
         int FLAG_UDP_RCV = 0;
         string COMMAND_FOR_SERVER="HOMEWORLD!!!\n";
-        int DATA_size = 0;
+        int DATA_size = 32000;
         byte[] DATA_SW0;//буфер0 приёма данных с шины SW
         byte[] DATA_SW1;//буфер1 приёма данных с шины SW
         UInt16 FLAG_BUF_SW = 0;
@@ -219,7 +220,15 @@ namespace fft_writer
             }
         }
 
-        string FLAG_DATA_NEW;//флаг показывает в каком массиве текущие данные
+        int POS_0 = 0;//текущий индекс в массиве обработки 
+        int POS_1 = 0;//текущий индекс в массиве обработки 
+        uint REAL_TIME0      = 0;
+        uint REAL_TIME0_new  = 0;
+        uint REAL_TIME1 = 0;
+        uint REAL_TIME1_new = 0;
+        int FLAG_DATA_NEW0;//флаг показывает в каком массиве текущие данные
+        int FLAG_DATA_NEW1;//флаг показывает в каком массиве текущие данные
+
         void DATA_COPY ()
         {
            while ((true) && (FLAG_THREAD == "start"))
@@ -229,16 +238,64 @@ namespace fft_writer
                  //   
                     if (FLAG_BUF_SW == 0)
                     {
-                        Array.Copy(DATA_SW0, RCV, DATA_SW0.Length);//копируем массив отсчётов в форму обработки 
-                        FLAG_DATA_NEW = "0";
-                        DATA_size = DATA_SW0.Length;
+                        //считываем время пакета
+                        REAL_TIME0_new=(Convert.ToUInt32(DATA_SW0[2]) << 24) + (Convert.ToUInt32(DATA_SW0[3]) << 16) + (Convert.ToUInt32(DATA_SW0[4]) << 8) + (Convert.ToUInt32(DATA_SW0[5]) << 0);
+
+                        if (DATA_SW0[1] == 0)
+                        {                            
+                            Array.Copy(DATA_SW0,2,RCV_0,POS_0, (DATA_SW0.Length-2));//копируем массив отсчётов в массив обработки с текущей позиции
+                            POS_0 = POS_0 + DATA_SW0.Length-2;
+                        } else
+                        if (DATA_SW0[1] == 1)
+                        {
+                            Array.Copy(DATA_SW0,2, RCV_1, POS_1, (DATA_SW0.Length-2));//копируем массив отсчётов в массив обработки с текущей позиции
+                            POS_1 = POS_1 + DATA_SW0.Length-2;
+                        }
+
+                        if (POS_0 > 32000)
+                        {
+                            FLAG_DATA_NEW0 = 1;
+                            POS_0 = 0;       
+                        }
+
+                        if (POS_1 > 32000)
+                        {
+                            FLAG_DATA_NEW1 = 1;
+                            POS_1 = 0;
+                        }
+                        REAL_TIME0 = REAL_TIME0_new;
                     }
+                    
                     if (FLAG_BUF_SW == 1)
                     {
-                        Array.Copy(DATA_SW1, RCV, DATA_SW1.Length);//копируем массив отсчётов в форму обработки
-                        FLAG_DATA_NEW = "1";
-                        DATA_size = DATA_SW1.Length;
+                        //считываем время пакета
+                        REAL_TIME1_new = (Convert.ToUInt32(DATA_SW1[2]) << 24) + (Convert.ToUInt32(DATA_SW1[3]) << 16) + (Convert.ToUInt32(DATA_SW1[4]) << 8) + (Convert.ToUInt32(DATA_SW1[5]) << 0);
+
+                        if (DATA_SW1[1] == 0)
+                        {
+                            Array.Copy(DATA_SW1, 2, RCV_0, POS_0, (DATA_SW1.Length-2));//копируем массив отсчётов в массив обработки с текущей позиции
+                            POS_0 = POS_0 + DATA_SW1.Length-2;
+                        }
+                        else
+                        if (DATA_SW1[1] == 1)
+                        {
+                            Array.Copy(DATA_SW1, 2, RCV_1, POS_1, (DATA_SW1.Length-2));//копируем массив отсчётов в массив обработки с текущей позиции
+                            POS_1 = POS_1 + DATA_SW1.Length-2;
+                        }
+
+                        if (POS_0 > 32000)
+                        {
+                            FLAG_DATA_NEW0 = 1;
+                            POS_0 = 0;
+                        }
+
+                        if (POS_1 > 32000)
+                        {
+                            FLAG_DATA_NEW1 = 1;
+                            POS_1 = 0;
+                        }
                     }
+                    
                     FLAG_UDP_RCV = 0;
                 }
                 Thread.Sleep(0);
@@ -250,8 +307,8 @@ namespace fft_writer
 
         void MSG_collector()
         {
-           if (RCV[1] == 0) Array.Copy(RCV, BUFFER_1, BUF_N*4);//копируем массив отсчётов в форму обработки 
-           if (RCV[1] == 1) Array.Copy(RCV, BUFFER_2, BUF_N*4);//
+           Array.Copy(RCV_0, BUFFER_1, BUF_N*4);//копируем массив отсчётов в форму обработки 
+           Array.Copy(RCV_1, BUFFER_2, BUF_N*4);//
 
            if (Convert.ToByte(channal_box.Text) == 1) { BUF_convert(BUFFER_1, DATA_size); }
            if (Convert.ToByte(channal_box.Text) == 2) { BUF_convert(BUFFER_2, DATA_size); }
@@ -319,11 +376,12 @@ namespace fft_writer
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-            if ((FLAG_DATA_NEW =="0")|| (FLAG_DATA_NEW == "1"))
+            if ((FLAG_DATA_NEW0 ==1)&&(FLAG_DATA_NEW1==1))
             {
                 selectedWindowName = cmbWindow.SelectedValue.ToString();//выбираем тип окна для БПФ
                 MSG_collector();
-                FLAG_DATA_NEW = "";
+                FLAG_DATA_NEW0 = 0;
+                FLAG_DATA_NEW1 = 0;
             }
 
             DISPLAY();
@@ -586,6 +644,7 @@ namespace fft_writer
                     // fig3.Show();
 
                     //------------------------------------------------------------------------
+                    
                     Array.Copy(magLog, MAG_LOG, magLog.Length);
                     Array.Copy(t, TSAMPL, t.Length);
                     AMAX = A_max;
