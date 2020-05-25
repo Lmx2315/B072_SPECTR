@@ -207,15 +207,15 @@ namespace fft_writer
                 }
                 FLAG_UDP_RCV = 1;//принят пакет
                 sch_packet++;
-
+                /*
                 UdpClient client = new UdpClient();
                 client.Connect("127.0.0.1", 666);
-
                 byte[] data;
                 string       msg = COMMAND_FOR_SERVER;
                             data = Encoding.UTF8.GetBytes(msg);
                 int number_bytes = client.Send(data, data.Length);
                 client.Close();
+                */
             }
         }
 
@@ -250,8 +250,8 @@ namespace fft_writer
 
         void MSG_collector()
         {
-           if (RCV[0] == 1) Array.Copy(RCV, BUFFER_1, BUF_N*4);//копируем массив отсчётов в форму обработки 
-           if (RCV[0] == 2) Array.Copy(RCV, BUFFER_2, BUF_N*4);//
+           if (RCV[1] == 0) Array.Copy(RCV, BUFFER_1, BUF_N*4);//копируем массив отсчётов в форму обработки 
+           if (RCV[1] == 1) Array.Copy(RCV, BUFFER_2, BUF_N*4);//
 
            if (Convert.ToByte(channal_box.Text) == 1) { BUF_convert(BUFFER_1, DATA_size); }
            if (Convert.ToByte(channal_box.Text) == 2) { BUF_convert(BUFFER_2, DATA_size); }
@@ -408,13 +408,13 @@ namespace fft_writer
                         //fft_array_x[i] = Convert.ToDouble(packet_data_i[i]- rcv_func.mat_oj_i); //удаляем постояннуюу составляющую высчитанную ранее
                         //fft_array_y[i] = Convert.ToDouble(packet_data_q[i]- rcv_func.mat_oj_q);
 
-                        if (packet_data_i[i] > 32767)
+                        if (packet_data_i[i] > 32767)//значит число отрицательное
                         {
                             z = (uint)(packet_data_i[i]);
                             z = (~z) & 0xffff;
                             packet_data_i[i] = -1 * Convert.ToInt32(z + 1);
                         }
-                        else packet_data_i[i] = Convert.ToInt32(packet_data_i[i]);
+                        else packet_data_i[i] = Convert.ToInt32(packet_data_i[i]);//значит число положительное
 
                         if (packet_data_q[i] > 32767)
                         {
@@ -426,6 +426,8 @@ namespace fft_writer
 
                         fft_array_x[i] = Convert.ToDouble(packet_data_i[i] - post_U_i); //
                         fft_array_y[i] = Convert.ToDouble(packet_data_q[i] - post_U_q);
+              //          Debug.WriteLine("fft_array_x[i]:" + fft_array_x[i]);
+              //          Debug.WriteLine("fft_array_y[i]:" + fft_array_y[i]);
                     }
 
                     //  Plot Time Series data
@@ -945,33 +947,36 @@ namespace fft_writer
         int[] data_0_i = new int[BUF_N];
         int[] data_0_q = new int[BUF_N];
 
-        int BUF_convert(byte [] m, int col)
+        int BUF_convert(byte [] m, int col)//разбирает массив данных на I и Q составляющие
         {
             int i = 0;
             int k = 0;
             int l = 0;
-            int z = 0;
+            int N_ch=   (Convert.ToInt32(m[0]) <<  8) + (Convert.ToInt32(m[1]) <<  0);
+            //реальное время в пакета (младшие 32 бита , старшие не пересылаем)
+            int time = ((Convert.ToInt32(m[2]) << 24) + (Convert.ToInt32(m[3]) << 16) + (Convert.ToInt32(m[4]) << 8) + (Convert.ToInt32(m[5]) << 0));
+    //        Debug.WriteLine("col=" + col);
+    //        Debug.WriteLine("N_ch=" + N_ch);
+    //        Debug.WriteLine("time=" + time);
 
-            z= (Convert.ToInt32(m[3])<<24)+ (Convert.ToInt32(m[2]) << 16)+ (Convert.ToInt32(m[1]) << 8)+ (Convert.ToInt32(m[0]) << 0);
 
             Array.Clear(data_0_i, 0, BUF_N);
             Array.Clear(data_0_q, 0, BUF_N);
+       //   Debug.WriteLine("M[0]={0:X}",z);
 
-       //     Debug.WriteLine("M[0]={0:X}",z);
-
-            for (i = 4; i < col; i++)//
+            for (i = 6; i < col; i++)//
             {                      
-                    if (k == 0) data_0_i[l] = Convert.ToInt32(m[i]);
-                    if (k == 1) data_0_i[l] = data_0_i[l] + (Convert.ToInt32(m[i])<<8);
+                    if (k == 0) data_0_i[l] = Convert.ToInt32(m[i])<<8;
+                    if (k == 1) data_0_i[l] = data_0_i[l] + Convert.ToInt32(m[i]);
          
-                    if (k == 2) data_0_q[l] = Convert.ToInt32(m[i]);
-                    if (k == 3) data_0_q[l] = data_0_q[l] + (Convert.ToInt32(m[i])<<8);
+                    if (k == 2) data_0_q[l] = Convert.ToInt32(m[i])<<8;
+                    if (k == 3) data_0_q[l] = data_0_q[l] + Convert.ToInt32(m[i]);
 
                 if (k != 3) k = k + 1;
                 else
                 {
-         //           Debug.WriteLine("data_0_q={0:X}", data_0_q[l]);
-         //           Debug.WriteLine("data_0_i={0:X}", data_0_i[l]);
+        //            Debug.WriteLine("data_0_q={0:X}", data_0_q[l]);
+        //            Debug.WriteLine("data_0_i={0:X}", data_0_i[l]);
                     k = 0;
                   l = l + 1;
                 }
@@ -989,21 +994,7 @@ namespace fft_writer
 
             byte[] utf8Bytes;
             byte[] win1251Bytes;
-
-            if ((Flag_comport_rcv == 1) && (serialPort1.IsOpen))
-            {
-                Flag_comport_rcv = 0;
-                size_rcv = serialPort1.BytesToRead;
-                serialPort1.Read(RCV, 0, size_rcv);
-                // buf_strng = serialPort1.ReadExisting();
-
-                buf_strng = Encoding.UTF8.GetString(RCV, 0, size_rcv);
-                richTextBox1.Text = buf_strng;
-
-                btn_com_open.Text = "send";
-                btn_com_open.ForeColor = Color.Black;
-                serialPort1.Close();
-            }
+                       
         }
             private void Button1_Click(object sender, EventArgs e)
         {
@@ -1038,74 +1029,10 @@ namespace fft_writer
             Console.WriteLine("***DISCONNECTED");
             Console.ReadLine();
 #endif
-            COMMAND_FOR_SERVER = Convert.ToString(Convert.ToDouble(textBox_freq_gen.Text) - Convert.ToDouble(textBox_freq_m54.Text));
         }
-
-        private void freq_send(int freq)
-        {
-            string command1 = " ~0 freq:";//добавил пробебел перед командой
-
-            if (serialPort1.IsOpen == false) serialPort1.PortName = textBox_com_port.Text;
-                try
-                {
-                    command1 = command1 + Convert.ToString(freq) + "; ";//...и после команды , чтобы срабатывало.
-                    if (serialPort1.IsOpen == false)
-                    {
-                        serialPort1.Open();
-                    }
-                    serialPort1.Write(command1);
-                     // здесь может быть код еще...
-                }
-                catch (Exception ex)
-                {
-                    btn_com_open.Text = "send";
-                    btn_com_open.ForeColor = Color.Black;
-                    // что-то пошло не так и упало исключение... Выведем сообщение исключения
-                    Console.WriteLine(string.Format("Port:'{0}' Error:'{1}'", serialPort1.PortName, ex.Message));
-                }
-        }
-
+               
         bool FLAG_IH_load = false;
-
-        private void btn_com_open_Click(object sender, EventArgs e)
-        {
-            string command1 = " ~0 freq:";
-            string command2 = " ~0 upr_at";
-            checkBox1.Checked = false;
-            if (serialPort1.IsOpen == false) serialPort1.PortName = textBox_com_port.Text;
-                        
-                try
-                {
-                    command1 = command1 + textBox_freq_m54.Text + "; ";
-                    //   command2 = command2 + channal_box.Text + ":" + textBox_att_m54.Text + ";";
-                    if (serialPort1.IsOpen == false)
-                    {
-                        serialPort1.Open();
-                    }
-                Debug.WriteLine("щлём:" + command1);
-                //       btn_com_open.Text = "trnsf";
-                btn_com_open.ForeColor = Color.Green;
-                    serialPort1.Write(command1);
-                //  serialPort1.Write(command2);
-                 // здесь может быть код еще...
-                }
-                catch (Exception ex)
-                {
-                    // что-то пошло не так и упало исключение... Выведем сообщение исключения
-                    Console.WriteLine(string.Format("Port:'{0}' Error:'{1}'", serialPort1.PortName, ex.Message));
-                }
-         
-            if (FLAG_IH_load == true) Kih_load();
-            else MessageBox.Show("Загрузите корректирующую АЧХ характеристику");
-
-
-        }
-
-        private void serialPort1_DataReceived(object sender, System.IO.Ports.SerialDataReceivedEventArgs e)
-        {
-            Flag_comport_rcv = 1;
-        }
-
+     
 
         int freq_start   = 0;
         int freq_stop    = 0;
@@ -1163,7 +1090,7 @@ namespace fft_writer
 #endif
 
             string prompt = "";
-            int freq_temp = Convert.ToInt32(textBox_freq_m54.Text);
+            int freq_temp = Convert.ToInt32("435000000");
 
             //Debug.WriteLine("freq_setup   : " + freq_setup);
             //Debug.WriteLine("freq_last    : " + freq_last);
@@ -1180,12 +1107,9 @@ namespace fft_writer
             {
                 VAR_IH_data.lenght++;
                 freq_temp = freq_current;
-                freq_send(freq_temp);//отсылаем текущую частоту в поделку для перестройки поделки её в центр диапазона
+                        //отсылаем текущую частоту в поделку для перестройки поделки её в центр диапазона
             }
             else VAR_IH_data_obzor.lenght++;
-
-
-            textBox_freq_m54.Text = Convert.ToString(freq_temp);
             
             prompt = "freq " + Convert.ToString(freq_current) + " Hz";
 #if WORK
@@ -1234,47 +1158,7 @@ namespace fft_writer
         {
 
         }
-
-        private void btn_com_open_2_Click(object sender, EventArgs e)
-        {
-            string command1 = "~0 freq:";
-            string command2 = "~0 upr_at";
-            string chanal = "";
-
-            if (serialPort1.IsOpen == false) serialPort1.PortName = textBox_com_port.Text;
-            if (btn_com_open.Text == "send")
-            {
-                try
-                {
-                    if (channal_box.Text == "1") chanal = "0"; else chanal = "1";
-                    command2 = command2 + chanal + ":" + textBox_att_m54.Text + ";";
-
-                    serialPort1.Open();
-                    //       btn_com_open.Text = "trnsf";
-                    btn_com_open.ForeColor = Color.Green;
-                //    serialPort1.Write(command1);
-                    serialPort1.Write(command2);
-                    // здесь может быть код еще...
-                }
-                catch (Exception ex)
-                {
-                    btn_com_open.Text = "send";
-                    btn_com_open.ForeColor = Color.Black;
-                    // что-то пошло не так и упало исключение... Выведем сообщение исключения
-                    Console.WriteLine(string.Format("Port:'{0}' Error:'{1}'", serialPort1.PortName, ex.Message));
-                }
-            }
-
-
-            /*
-            else if (serialPort1.IsOpen == true)
-            {
-                btn_com_open.Text = "open";
-                btn_com_open.ForeColor = Color.Black;
-                serialPort1.Close();
-            }
-            */
-        }
+       
 
         private void btn_calibrovka_Click(object sender, EventArgs e)
         {
@@ -1423,7 +1307,7 @@ namespace fft_writer
             (k, Max_A) = MAX_f(M_ach, Ach_length);//определяем максимум в реальной АЧХ
 
             //определяем центральную частоту в номере отсчёта массива
-            freq_centr = Convert.ToInt32(textBox_freq_m54.Text);
+            freq_centr = Convert.ToInt32("435000000");
             N_freq = find_number(freq_centr, F_ach);
             N_freq_low = find_number(freq_low, F_ach);
             N_freq_high = find_number(freq_high, F_ach);
