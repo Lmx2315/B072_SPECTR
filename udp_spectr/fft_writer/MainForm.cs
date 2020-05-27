@@ -60,8 +60,8 @@ namespace fft_writer
         Class1 rcv_func=new Class1();
 		Form1 fft_form     = new Form1();
 		
-		static int  BUF_N= 64000;
-		static int Fsample=12;
+		static int  BUF_N= 64000;//64000
+        static int Fsample=12;
 
 		Byte  [] RCV_0         =new byte[64000];
         Byte[] RCV_1 = new byte[64000];
@@ -76,7 +76,8 @@ namespace fft_writer
         byte[] buf = new byte[64];
 
         double filtr = 0;
-        int sch_packet = 0;
+        int sch_packet  = 0;
+        int sch_packet2 = 0;
         int FLAG_filtr = 0;
 
         string fileName;
@@ -86,7 +87,7 @@ namespace fft_writer
         string selectedWindowName;
 
          Plot fig1 = new Plot(100,"I Input", "Sample", "Вольт","","","","","");
-	     Plot fig2 = new Plot(100,"Q Input", "Sample", "Вольт","","","","","");
+	     Plot3 fig2 = new Plot3("time","x","y");
 		 Plot fig3 = new Plot(85,"FFT (dBV)", "кГц", "Mag (dBV)","","","","","");
         
 
@@ -182,7 +183,7 @@ namespace fft_writer
         int DATA_size = 32000;
         byte[] DATA_SW0;//буфер0 приёма данных с шины SW
         byte[] DATA_SW1;//буфер1 приёма данных с шины SW
-        UInt16 FLAG_BUF_SW = 0;
+       static UInt16 FLAG_BUF_SW = 1;
         private void Listening()
         {           
             //Listening loop.
@@ -196,10 +197,11 @@ namespace fft_writer
                         DATA_SW0 = _server.Receive(ref _client);
                         FLAG_BUF_SW = 0;
                     }
-                    else
+                    else 
+                    if (FLAG_BUF_SW == 3)
                     {
                         DATA_SW1 = _server.Receive(ref _client);
-                        FLAG_BUF_SW = 1;
+                        FLAG_BUF_SW = 4;
                     }
                 }
                 catch (Exception excp)
@@ -219,7 +221,7 @@ namespace fft_writer
                 */
             }
         }
-
+        string time_strg = "";
         int POS_0 = 0;//текущий индекс в массиве обработки 
         int POS_1 = 0;//текущий индекс в массиве обработки 
         uint REAL_TIME0      = 0;
@@ -241,67 +243,59 @@ namespace fft_writer
                         //считываем время пакета
                         REAL_TIME0_new=(Convert.ToUInt32(DATA_SW0[2]) << 24) + (Convert.ToUInt32(DATA_SW0[3]) << 16) + (Convert.ToUInt32(DATA_SW0[4]) << 8) + (Convert.ToUInt32(DATA_SW0[5]) << 0);
 
-                        if (DATA_SW0[1] == 0)
-                        {                            
-                            Array.Copy(DATA_SW0,2,RCV_0,POS_0, (DATA_SW0.Length-2));//копируем массив отсчётов в массив обработки с текущей позиции
-               //             POS_0 = POS_0 + DATA_SW0.Length-2;
-                        } else
-                        if (DATA_SW0[1] == 1)
+                        if (REAL_TIME0_new==(REAL_TIME0+1))
                         {
-                            Array.Copy(DATA_SW0,2, RCV_1, POS_1, (DATA_SW0.Length-2));//копируем массив отсчётов в массив обработки с текущей позиции
-               //             POS_1 = POS_1 + DATA_SW0.Length-2;
-                        }
-
-              //          if (POS_0 > 32000)
+                            if (DATA_SW0[1] == 0)
+                             {                         
+                                Array.Copy(DATA_SW0,2,RCV_0,POS_0, (DATA_SW0.Length-2));//копируем массив отсчётов в массив обработки с текущей позиции
+                                POS_0 = POS_0 + DATA_SW0.Length-2;
+                                time_strg = time_strg + Convert.ToString(REAL_TIME0_new) + " ";
+                            } 
+                    //        if (POS_0 > 16384)
+                             {
+                                FLAG_DATA_NEW0 = 1;
+                                POS_0 = 0;       
+                            }
+                        }  else
                         {
-                            FLAG_DATA_NEW0 = 1;
-                            POS_0 = 0;       
-                        }
-
-               //         if (POS_1 > 32000)
-                        {
-                            FLAG_DATA_NEW1 = 1;
-                            POS_1 = 0;
-                        }
-                        REAL_TIME0 = REAL_TIME0_new;
-                 //       Debug.WriteLine("REAL_TIME0:" + REAL_TIME0);
-                    }
-                    
-                    if (FLAG_BUF_SW == 1)
-                    {
-                        //считываем время пакета
-                        REAL_TIME1_new = (Convert.ToUInt32(DATA_SW1[2]) << 24) + (Convert.ToUInt32(DATA_SW1[3]) << 16) + (Convert.ToUInt32(DATA_SW1[4]) << 8) + (Convert.ToUInt32(DATA_SW1[5]) << 0);
-
-                        if (DATA_SW1[1] == 0)
-                        {
-                            Array.Copy(DATA_SW1, 2, RCV_0, POS_0, (DATA_SW1.Length-2));//копируем массив отсчётов в массив обработки с текущей позиции
-             //               POS_0 = POS_0 + DATA_SW1.Length-2;
-                        }
-                        else
-                        if (DATA_SW1[1] == 1)
-                        {
-                            Array.Copy(DATA_SW1, 2, RCV_1, POS_1, (DATA_SW1.Length-2));//копируем массив отсчётов в массив обработки с текущей позиции
-            //                POS_1 = POS_1 + DATA_SW1.Length-2;
-                        }
-
-               //         if (POS_0 > 32000)
-                        {
-                            FLAG_DATA_NEW0 = 1;
                             POS_0 = 0;
                         }
-
-              //          if (POS_1 > 32000)
-                        {
-                            FLAG_DATA_NEW1 = 1;
-                            POS_1 = 0;
-                        }
-                        REAL_TIME1 = REAL_TIME1_new;
-             //           Debug.WriteLine("REAL_TIME1:" + REAL_TIME1);
+                        FLAG_BUF_SW = 1;
+                        REAL_TIME0 = REAL_TIME0_new;
+                        
                     }
                     
+                    if (FLAG_BUF_SW == 4)
+                    {
+                        //считываем время пакета
+                        REAL_TIME0_new = (Convert.ToUInt32(DATA_SW1[2]) << 24) + (Convert.ToUInt32(DATA_SW1[3]) << 16) + (Convert.ToUInt32(DATA_SW1[4]) << 8) + (Convert.ToUInt32(DATA_SW1[5]) << 0);
+
+                        if (REAL_TIME0_new == (REAL_TIME0 + 1))
+                        {
+                            if (DATA_SW1[1] == 0)
+                            {
+                                Array.Copy(DATA_SW1, 2, RCV_0, POS_0, (DATA_SW1.Length - 2));//копируем массив отсчётов в массив обработки с текущей позиции
+                                POS_0 = POS_0 + DATA_SW1.Length - 2;
+                                time_strg = time_strg + Convert.ToString(REAL_TIME0_new) + " ";
+                            }
+
+                            if (POS_0 > 16384)
+                            {
+                                FLAG_DATA_NEW0 = 1;
+                                POS_0 = 0;
+                            }
+                        } else
+                        {
+                            POS_0 = 0;
+                        }                           
+                        
+                        REAL_TIME1 = REAL_TIME1_new;
+                     }                    
                    
+                     sch_packet2++;//счётчик пакетов в вспомогательном треде
                     FLAG_UDP_RCV = 0;
                 }
+                
                 Thread.Sleep(0);
             }
         }
@@ -380,7 +374,7 @@ namespace fft_writer
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-            if ((FLAG_DATA_NEW0 ==1)&&(FLAG_DATA_NEW1==1))
+            if (FLAG_DATA_NEW0 ==1)
             {
                 selectedWindowName = cmbWindow.SelectedValue.ToString();//выбираем тип окна для БПФ
                 MSG_collector();
@@ -389,8 +383,12 @@ namespace fft_writer
             }
 
             DISPLAY();
-            textBox_sch.Text = Convert.ToString(sch_packet);
+            textBox_sch.Text = Convert.ToString(sch_packet);  //тут сколько пакетов принято
             sch_packet = 0;
+            textBox2_sch.Text = Convert.ToString(sch_packet2);//тут сколько обработано
+            sch_packet2 = 0;
+            richTextBox1.Text = richTextBox1.Text + time_strg;
+            time_strg = "";
             filtr = 12000 / BUF_N * B_win;
             label8.Text = "полоса фильтра:" + Convert.ToString(filtr) + "кГц";
         }
@@ -420,6 +418,7 @@ namespace fft_writer
         double  AMAX, BMAX, CMAX, M1X, M1Y, M2X, M2Y, M3X, M3Y;
         double [] TSAMPL  = new double[4096];
         double [] MAG_LOG = new double[4096];
+        double [] time_series = new double[4096];
 
         double H_a = 0;//максимальный уровень сигнала в спектре
         double H_b = 0;//вторая максимальная гармоника в спектре
@@ -511,13 +510,7 @@ namespace fft_writer
               //          Debug.WriteLine("fft_array_y[i]:" + fft_array_y[i]);
                     }
 
-                    //  Plot Time Series data
-                    //  fig1.PlotData(windowedTimeSeries_q);
-                    //  fig1.Show();
-
-                    //  Plot Time Series data
-                    //  fig2.PlotData(windowedTimeSeries_i);
-                    //  fig2.Show();
+                  
 
                     // Instantiate & Initialize the FFT class - это вещественная FFt сейчас не используем.
                     //            DSPLib.FFT fft = new DSPLib.FFT();
@@ -576,13 +569,25 @@ namespace fft_writer
                         Array.Copy(fx_q, fft_array_y, N_temp);
                     }
 
-
                     // Apply window to the time series data
                     double[] wc = DSP.Window.Coefficients(windowToApply, N_temp);
                     double windowScaleFactor = DSP.Window.ScaleFactor.Signal(wc);
 
                     double[] windowedTimeSeries_i = DSP.Math.Multiply(fft_array_x, wc);
                     double[] windowedTimeSeries_q = DSP.Math.Multiply(fft_array_y, wc);
+                  /*  
+                     for (i = 0; i < time_series.Length; i++)
+                    {
+                        time_series[i] = Convert.ToDouble(i);
+                    }
+                   */
+                   
+                    Array.Copy(windowedTimeSeries_i, time_series, windowedTimeSeries_i.Length);//
+
+
+                    //  Plot Time Series data
+                    //       fig2.PlotData(windowedTimeSeries_i);
+                    //       fig2.Show();
 
                     fft_z.FFT(1, k, windowedTimeSeries_i, windowedTimeSeries_q);
 
@@ -694,6 +699,9 @@ namespace fft_writer
                 stopwatch.Start();
                 fig3.PlotData(TSAMPL, MAG_LOG, AMAX, BMAX, CMAX, M1X, M1Y, M2X, M2Y, M3X, M3Y);
                 fig3.Show();
+                
+                fig2.PlotData(time_series);
+                fig2.Show();
                 FLAG_DISPAY = "";
             }            
         }
@@ -989,10 +997,8 @@ namespace fft_writer
             int n = 0;
             
             n= Convert.ToInt16(text_N_fft.Text);
-
             if ((n==64)||(n==128)||(n==256)||(n==512)||(n==1024)||(n==2048)||(n==4096) || (n == 8192))   BUF_N =Convert.ToInt16(text_N_fft.Text);
             //Debug.WriteLine("изменили BUF_N:"+BUF_N);
-
 		}
 		void TextBox1TextChanged(object sender, EventArgs e)
 		{

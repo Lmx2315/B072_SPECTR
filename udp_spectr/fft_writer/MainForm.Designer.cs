@@ -118,11 +118,12 @@ namespace fft_writer
             this.label30 = new System.Windows.Forms.Label();
             this.label31 = new System.Windows.Forms.Label();
             this.label32 = new System.Windows.Forms.Label();
+            this.textBox2_sch = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // my_port_box
             // 
-            this.my_port_box.Location = new System.Drawing.Point(941, 73);
+            this.my_port_box.Location = new System.Drawing.Point(665, 65);
             this.my_port_box.Margin = new System.Windows.Forms.Padding(4);
             this.my_port_box.Name = "my_port_box";
             this.my_port_box.Size = new System.Drawing.Size(99, 22);
@@ -237,7 +238,7 @@ namespace fft_writer
             // 
             // my_ip_box
             // 
-            this.my_ip_box.Location = new System.Drawing.Point(941, 28);
+            this.my_ip_box.Location = new System.Drawing.Point(665, 20);
             this.my_ip_box.Margin = new System.Windows.Forms.Padding(4);
             this.my_ip_box.Name = "my_ip_box";
             this.my_ip_box.Size = new System.Drawing.Size(99, 22);
@@ -246,7 +247,7 @@ namespace fft_writer
             // 
             // dut_ip
             // 
-            this.dut_ip.Location = new System.Drawing.Point(941, 122);
+            this.dut_ip.Location = new System.Drawing.Point(665, 114);
             this.dut_ip.Margin = new System.Windows.Forms.Padding(4);
             this.dut_ip.Name = "dut_ip";
             this.dut_ip.Size = new System.Drawing.Size(99, 22);
@@ -255,7 +256,7 @@ namespace fft_writer
             // 
             // dut_port
             // 
-            this.dut_port.Location = new System.Drawing.Point(941, 169);
+            this.dut_port.Location = new System.Drawing.Point(665, 161);
             this.dut_port.Margin = new System.Windows.Forms.Padding(4);
             this.dut_port.Name = "dut_port";
             this.dut_port.Size = new System.Drawing.Size(99, 22);
@@ -265,7 +266,7 @@ namespace fft_writer
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(1049, 32);
+            this.label3.Location = new System.Drawing.Point(773, 24);
             this.label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(45, 16);
@@ -275,7 +276,7 @@ namespace fft_writer
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(1049, 122);
+            this.label4.Location = new System.Drawing.Point(773, 114);
             this.label4.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(45, 16);
@@ -285,7 +286,7 @@ namespace fft_writer
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(1049, 73);
+            this.label5.Location = new System.Drawing.Point(773, 65);
             this.label5.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(31, 16);
@@ -295,7 +296,7 @@ namespace fft_writer
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(1049, 171);
+            this.label6.Location = new System.Drawing.Point(773, 163);
             this.label6.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(56, 16);
@@ -325,7 +326,7 @@ namespace fft_writer
             // 
             // open_file_BTN
             // 
-            this.open_file_BTN.Location = new System.Drawing.Point(941, 199);
+            this.open_file_BTN.Location = new System.Drawing.Point(665, 191);
             this.open_file_BTN.Margin = new System.Windows.Forms.Padding(4);
             this.open_file_BTN.Name = "open_file_BTN";
             this.open_file_BTN.Size = new System.Drawing.Size(100, 28);
@@ -497,7 +498,7 @@ namespace fft_writer
             // 
             // richTextBox1
             // 
-            this.richTextBox1.Location = new System.Drawing.Point(713, 13);
+            this.richTextBox1.Location = new System.Drawing.Point(837, 13);
             this.richTextBox1.Margin = new System.Windows.Forms.Padding(4);
             this.richTextBox1.Name = "richTextBox1";
             this.richTextBox1.Size = new System.Drawing.Size(191, 464);
@@ -645,7 +646,7 @@ namespace fft_writer
             this.progressBar1.Location = new System.Drawing.Point(13, 487);
             this.progressBar1.Margin = new System.Windows.Forms.Padding(4);
             this.progressBar1.Name = "progressBar1";
-            this.progressBar1.Size = new System.Drawing.Size(894, 28);
+            this.progressBar1.Size = new System.Drawing.Size(816, 28);
             this.progressBar1.TabIndex = 62;
             this.progressBar1.Visible = false;
             // 
@@ -766,11 +767,22 @@ namespace fft_writer
             this.label32.Text = "окно";
             this.label32.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
+            // textBox2_sch
+            // 
+            this.textBox2_sch.Location = new System.Drawing.Point(137, 423);
+            this.textBox2_sch.Margin = new System.Windows.Forms.Padding(4);
+            this.textBox2_sch.Name = "textBox2_sch";
+            this.textBox2_sch.Size = new System.Drawing.Size(99, 22);
+            this.textBox2_sch.TabIndex = 76;
+            this.textBox2_sch.Text = "1";
+            this.textBox2_sch.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1124, 528);
+            this.ClientSize = new System.Drawing.Size(1050, 528);
+            this.Controls.Add(this.textBox2_sch);
             this.Controls.Add(this.label32);
             this.Controls.Add(this.label31);
             this.Controls.Add(this.label30);
@@ -899,5 +911,6 @@ namespace fft_writer
         private System.Windows.Forms.Label label30;
         private System.Windows.Forms.Label label31;
         private System.Windows.Forms.Label label32;
+        private System.Windows.Forms.TextBox textBox2_sch;
     }
 }
