@@ -212,7 +212,7 @@ namespace fft_writer
             this.text_N_fft.Name = "text_N_fft";
             this.text_N_fft.Size = new System.Drawing.Size(132, 22);
             this.text_N_fft.TabIndex = 11;
-            this.text_N_fft.Text = "4096";
+            this.text_N_fft.Text = "256";
             this.text_N_fft.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.text_N_fft.TextChanged += new System.EventHandler(this.N_fftTextChanged);
             // 

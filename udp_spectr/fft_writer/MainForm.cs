@@ -244,26 +244,27 @@ namespace fft_writer
                         if (DATA_SW0[1] == 0)
                         {                            
                             Array.Copy(DATA_SW0,2,RCV_0,POS_0, (DATA_SW0.Length-2));//копируем массив отсчётов в массив обработки с текущей позиции
-                            POS_0 = POS_0 + DATA_SW0.Length-2;
+               //             POS_0 = POS_0 + DATA_SW0.Length-2;
                         } else
                         if (DATA_SW0[1] == 1)
                         {
                             Array.Copy(DATA_SW0,2, RCV_1, POS_1, (DATA_SW0.Length-2));//копируем массив отсчётов в массив обработки с текущей позиции
-                            POS_1 = POS_1 + DATA_SW0.Length-2;
+               //             POS_1 = POS_1 + DATA_SW0.Length-2;
                         }
 
-                        if (POS_0 > 32000)
+              //          if (POS_0 > 32000)
                         {
                             FLAG_DATA_NEW0 = 1;
                             POS_0 = 0;       
                         }
 
-                        if (POS_1 > 32000)
+               //         if (POS_1 > 32000)
                         {
                             FLAG_DATA_NEW1 = 1;
                             POS_1 = 0;
                         }
                         REAL_TIME0 = REAL_TIME0_new;
+                 //       Debug.WriteLine("REAL_TIME0:" + REAL_TIME0);
                     }
                     
                     if (FLAG_BUF_SW == 1)
@@ -274,28 +275,31 @@ namespace fft_writer
                         if (DATA_SW1[1] == 0)
                         {
                             Array.Copy(DATA_SW1, 2, RCV_0, POS_0, (DATA_SW1.Length-2));//копируем массив отсчётов в массив обработки с текущей позиции
-                            POS_0 = POS_0 + DATA_SW1.Length-2;
+             //               POS_0 = POS_0 + DATA_SW1.Length-2;
                         }
                         else
                         if (DATA_SW1[1] == 1)
                         {
                             Array.Copy(DATA_SW1, 2, RCV_1, POS_1, (DATA_SW1.Length-2));//копируем массив отсчётов в массив обработки с текущей позиции
-                            POS_1 = POS_1 + DATA_SW1.Length-2;
+            //                POS_1 = POS_1 + DATA_SW1.Length-2;
                         }
 
-                        if (POS_0 > 32000)
+               //         if (POS_0 > 32000)
                         {
                             FLAG_DATA_NEW0 = 1;
                             POS_0 = 0;
                         }
 
-                        if (POS_1 > 32000)
+              //          if (POS_1 > 32000)
                         {
                             FLAG_DATA_NEW1 = 1;
                             POS_1 = 0;
                         }
+                        REAL_TIME1 = REAL_TIME1_new;
+             //           Debug.WriteLine("REAL_TIME1:" + REAL_TIME1);
                     }
                     
+                   
                     FLAG_UDP_RCV = 0;
                 }
                 Thread.Sleep(0);
@@ -310,8 +314,8 @@ namespace fft_writer
            Array.Copy(RCV_0, BUFFER_1, BUF_N*4);//копируем массив отсчётов в форму обработки 
            Array.Copy(RCV_1, BUFFER_2, BUF_N*4);//
 
-           if (Convert.ToByte(channal_box.Text) == 1) { BUF_convert(BUFFER_1, DATA_size); }
-           if (Convert.ToByte(channal_box.Text) == 2) { BUF_convert(BUFFER_2, DATA_size); }
+           if (Convert.ToByte(channal_box.Text) == 0) { BUF_convert(BUFFER_1, DATA_size); }
+           if (Convert.ToByte(channal_box.Text) == 1) { BUF_convert(BUFFER_2, DATA_size); }
 
             Array.Copy(data_0_i, packet_data_i, BUF_N);//копируем массив отсчётов в форму обработки	
             Array.Copy(data_0_q, packet_data_q, BUF_N);//копируем массив отсчётов в форму обработки	
@@ -465,7 +469,7 @@ namespace fft_writer
                     {
                         //fft_array_x[i] = Convert.ToDouble(packet_data_i[i]- rcv_func.mat_oj_i); //удаляем постояннуюу составляющую высчитанную ранее
                         //fft_array_y[i] = Convert.ToDouble(packet_data_q[i]- rcv_func.mat_oj_q);
-
+                        
                         if (packet_data_i[i] > 32767)//значит число отрицательное
                         {
                             z = (uint)(packet_data_i[i]);
@@ -481,7 +485,26 @@ namespace fft_writer
                             packet_data_q[i] = -1 * Convert.ToInt32(z + 1);
                         }
                         else packet_data_q[i] = Convert.ToInt32(packet_data_q[i]);
+                        
+                        /*
+                        z = (uint)(packet_data_i[i]);
+                        z = (~z) & 0xffff;
 
+                        if (((z >> 15) & 0x01) == 0x01)
+                        {
+                             packet_data_i[i] = Convert.ToInt32(1 * z) - 65535;
+                        }
+                        else packet_data_i[i] = Convert.ToInt32(1 * z);
+
+                        z = (uint)(packet_data_q[i]);
+                        z = (~z) & 0xffff;
+
+                        if (((z >> 15) & 0x01) == 0x01)
+                        {
+                            packet_data_q[i] = Convert.ToInt32(1 * z) - 65535;
+                        }
+                        else packet_data_q[i] = Convert.ToInt32(1 * z);
+                        */
                         fft_array_x[i] = Convert.ToDouble(packet_data_i[i] - post_U_i); //
                         fft_array_y[i] = Convert.ToDouble(packet_data_q[i] - post_U_q);
               //          Debug.WriteLine("fft_array_x[i]:" + fft_array_x[i]);
