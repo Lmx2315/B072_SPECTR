@@ -22,14 +22,9 @@ using System.Numerics;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-using System.Collections.Generic;
-using System.Text;
 using MinimalisticTelnet;
 using System.Linq;
 //using FFTLibrary;
-
-
-
 namespace fft_writer
 {
 	/// <summary>
@@ -64,7 +59,7 @@ namespace fft_writer
         static int Fsample=12;
 
 		Byte  [] RCV_0         =new byte[64000];
-        Byte[] RCV_1 = new byte[64000];
+        Byte  [] RCV_1 = new byte[64000];
         int   [] FFT_array   =new int [64000];
 	    int   [] packet_data =new int [64000];
         int   [] packet_data_i = new int [64000];
@@ -128,7 +123,7 @@ namespace fft_writer
             // IPEndPoint serverEnd = new IPEndPoint(IPAddress.Any, 1234);
 
             _server = new UdpClient(serverEnd);
-            _server.Client.ReceiveBufferSize = 8192 * 200;//увеличиваем размер приёмного буфера!!!
+            _server.Client.ReceiveBufferSize = 8192 * 50;//увеличиваем размер приёмного буфера!!!
             Debug.WriteLine("Waiting for a client...");
             //Create the client end.
             //_client = new IPEndPoint(IPAddress.Any, 0);
@@ -183,7 +178,7 @@ namespace fft_writer
         int DATA_size = 32000;
         byte[] DATA_SW0;//буфер0 приёма данных с шины SW
         byte[] DATA_SW1;//буфер1 приёма данных с шины SW
-       static UInt16 FLAG_BUF_SW = 1;
+       static UInt16 FLAG_BUF_SW = 0;
         private void Listening()
         {           
             //Listening loop.
@@ -192,37 +187,21 @@ namespace fft_writer
                 if (this.Disposing) return;
                 try
                 { //receieve a message form a client.
-                    if (FLAG_BUF_SW == 1)  //тут висим пока не приходят данные
+                    if (FLAG_BUF_SW == 0)  //тут висим пока не приходят данные
                     {
                         DATA_SW0 = _server.Receive(ref _client);
-                        FLAG_BUF_SW = 0;
-                    }
-                    else 
-                    if (FLAG_BUF_SW == 3)
-                    {
-                        DATA_SW1 = _server.Receive(ref _client);
-                        FLAG_BUF_SW = 4;
-                    }
+                        FLAG_BUF_SW = 1;
+                    }                   
                 }
                 catch (Exception excp)
                 {
                     Console.WriteLine(excp.Message);
                 }
-                FLAG_UDP_RCV = 1;//принят пакет
                 sch_packet++;
-                /*
-                UdpClient client = new UdpClient();
-                client.Connect("127.0.0.1", 666);
-                byte[] data;
-                string       msg = COMMAND_FOR_SERVER;
-                            data = Encoding.UTF8.GetBytes(msg);
-                int number_bytes = client.Send(data, data.Length);
-                client.Close();
-                */
             }
         }
         string time_strg = "";
-        int POS_0 = 0;//текущий индекс в массиве обработки 
+        static int POS_0 = 0;//текущий индекс в массиве обработки 
         int POS_1 = 0;//текущий индекс в массиве обработки 
         uint REAL_TIME0      = 0;
         uint REAL_TIME0_new  = 0;
@@ -230,92 +209,58 @@ namespace fft_writer
         uint REAL_TIME1_new = 0;
         int FLAG_DATA_NEW0;//флаг показывает в каком массиве текущие данные
         int FLAG_DATA_NEW1;//флаг показывает в каком массиве текущие данные
-
+        
         void DATA_COPY ()
         {
+            int Nbuf=Convert.ToInt32(text_N_fft.Text);//считываем размер БПФ
+                Nbuf = Nbuf * 4;
+
            while ((true) && (FLAG_THREAD == "start"))
             {
-                if (FLAG_UDP_RCV == 1)
-                {
-                 //   
-                    if (FLAG_BUF_SW == 0)
+                    if (FLAG_BUF_SW == 1)
                     {
-                        //считываем время пакета
-                        REAL_TIME0_new=(Convert.ToUInt32(DATA_SW0[2]) << 24) + (Convert.ToUInt32(DATA_SW0[3]) << 16) + (Convert.ToUInt32(DATA_SW0[4]) << 8) + (Convert.ToUInt32(DATA_SW0[5]) << 0);
+                        sch_packet2++;//счётчик пакетов в вспомогательном треде
+                       //считываем время пакета
+                       REAL_TIME0_new =(Convert.ToUInt32(DATA_SW0[2]) << 24) + (Convert.ToUInt32(DATA_SW0[3]) << 16) + (Convert.ToUInt32(DATA_SW0[4]) << 8) + (Convert.ToUInt32(DATA_SW0[5]) << 0);
 
                         if (REAL_TIME0_new==(REAL_TIME0+1))
                         {
                             if (DATA_SW0[1] == 0)
                              {                         
-                                Array.Copy(DATA_SW0,2,RCV_0,POS_0, (DATA_SW0.Length-2));//копируем массив отсчётов в массив обработки с текущей позиции
-                                POS_0 = POS_0 + DATA_SW0.Length-2;
-                                time_strg = time_strg + Convert.ToString(REAL_TIME0_new) + " ";
-                            } 
-                    //        if (POS_0 > 16384)
-                             {
-                                FLAG_DATA_NEW0 = 1;
-                                POS_0 = 0;       
-                            }
-                        }  else
-                        {
+                                Array.Copy(DATA_SW0,6,RCV_0,POS_0, (DATA_SW0.Length-6));//копируем массив отсчётов в массив обработки с текущей позиции
+                                POS_0 = POS_0 + DATA_SW0.Length-6;
+                                    //   Debug.WriteLine("POS_0:"+ POS_0);
+                                    //   time_strg = time_strg + Convert.ToString(REAL_TIME0_new) + " ";
+                                if (POS_0 > Nbuf)//
+                                {
+                                    //  Debug.WriteLine("1");
+                                    FLAG_BUF_SW = 2;
+                                    FLAG_DATA_NEW0 = 1;
+                                    POS_0 = 0;       
+                                } else FLAG_BUF_SW =0;
+                             }                                
+                            
+                        } else if (DATA_SW0[1] == 0)
+                        {                                               
+                            Array.Clear(RCV_0, 0, RCV_0.Length);
                             POS_0 = 0;
                         }
-                        FLAG_BUF_SW = 1;
-                        REAL_TIME0 = REAL_TIME0_new;
-                        
-                    }
-                    
-                    if (FLAG_BUF_SW == 4)
-                    {
-                        //считываем время пакета
-                        REAL_TIME0_new = (Convert.ToUInt32(DATA_SW1[2]) << 24) + (Convert.ToUInt32(DATA_SW1[3]) << 16) + (Convert.ToUInt32(DATA_SW1[4]) << 8) + (Convert.ToUInt32(DATA_SW1[5]) << 0);
-
-                        if (REAL_TIME0_new == (REAL_TIME0 + 1))
-                        {
-                            if (DATA_SW1[1] == 0)
-                            {
-                                Array.Copy(DATA_SW1, 2, RCV_0, POS_0, (DATA_SW1.Length - 2));//копируем массив отсчётов в массив обработки с текущей позиции
-                                POS_0 = POS_0 + DATA_SW1.Length - 2;
-                                time_strg = time_strg + Convert.ToString(REAL_TIME0_new) + " ";
-                            }
-
-                            if (POS_0 > 16384)
-                            {
-                                FLAG_DATA_NEW0 = 1;
-                                POS_0 = 0;
-                            }
-                        } else
-                        {
-                            POS_0 = 0;
-                        }                           
-                        
-                        REAL_TIME1 = REAL_TIME1_new;
-                     }                    
-                   
-                     sch_packet2++;//счётчик пакетов в вспомогательном треде
-                    FLAG_UDP_RCV = 0;
-                }
-                
+                    REAL_TIME0 = REAL_TIME0_new;
+                    if (FLAG_BUF_SW!=2) FLAG_BUF_SW = 0;
+                    }                             
                 Thread.Sleep(0);
-            }
+           }
         }
-
-        byte[] BUFFER_1 = new byte[64000];
-        byte[] BUFFER_2 = new byte[64000];
-
         void MSG_collector()
         {
-           Array.Copy(RCV_0, BUFFER_1, BUF_N*4);//копируем массив отсчётов в форму обработки 
-           Array.Copy(RCV_1, BUFFER_2, BUF_N*4);//
+           int Nbuf = Convert.ToInt32(text_N_fft.Text);// размер БПФ
+           if (Convert.ToByte(channal_box.Text) == 0) { BUF_convert(RCV_0, Nbuf); }
+           if (Convert.ToByte(channal_box.Text) == 1) { BUF_convert(RCV_1, Nbuf); }
 
-           if (Convert.ToByte(channal_box.Text) == 0) { BUF_convert(BUFFER_1, DATA_size); }
-           if (Convert.ToByte(channal_box.Text) == 1) { BUF_convert(BUFFER_2, DATA_size); }
-
-            Array.Copy(data_0_i, packet_data_i, BUF_N);//копируем массив отсчётов в форму обработки	
-            Array.Copy(data_0_q, packet_data_q, BUF_N);//копируем массив отсчётов в форму обработки	
+            Array.Copy(data_0_i, packet_data_i, Nbuf);//копируем массив отсчётов в форму обработки	
+            Array.Copy(data_0_q, packet_data_q, Nbuf);//копируем массив отсчётов в форму обработки	
 
             flag_NEW_FFT = 1;//сообщаем форме что пришёл новый массив fft
-          //  fft_out();
         }
 
         private void ShowMsg(string msg)
@@ -367,9 +312,7 @@ namespace fft_writer
     
                 i = i + 4;
             }
-
             return data;
-
         }
 
         private void timer1_Tick(object sender, EventArgs e)
@@ -377,9 +320,10 @@ namespace fft_writer
             if (FLAG_DATA_NEW0 ==1)
             {
                 selectedWindowName = cmbWindow.SelectedValue.ToString();//выбираем тип окна для БПФ
+              //Debug.WriteLine("*");
                 MSG_collector();
                 FLAG_DATA_NEW0 = 0;
-                FLAG_DATA_NEW1 = 0;
+                FLAG_BUF_SW = 0;
             }
 
             DISPLAY();
@@ -438,27 +382,27 @@ namespace fft_writer
                     uint N_temp;
                     int N_complex;
                     int i;
-                    int N;
                     uint z;
                     int step = 0;
                     int pstep = 0;
                     int N_correct = 128;
 
-                    N_temp = Convert.ToUInt32(BUF_N);
-                    N_complex = Convert.ToInt32(BUF_N);
+                    int Nbuf  = Convert.ToInt32(text_N_fft.Text);// размер БПФ
+                    N_temp    = Convert.ToUInt32(Nbuf);
+                    N_complex = Convert.ToInt32(Nbuf);
 
                     double A_max = 0;
                     double B_max = 0;
                     double C_max = 0;
 
-                    double[] m_sort = new double[BUF_N];
+                    double[] m_sort = new double[Nbuf];
 
-                    double[] fft_array = new double[BUF_N];
-                    double[] fft_array_x = new double[BUF_N];
-                    double[] fft_array_y = new double[BUF_N];
+                    double[] fft_array   = new double[Nbuf];
+                    double[] fft_array_x = new double[Nbuf];
+                    double[] fft_array_y = new double[Nbuf];
 
-                    double[] t = new double[BUF_N];
-                    double[] A = new double[BUF_N];
+                    double[] t = new double[Nbuf];
+                    double[] A = new double[Nbuf];
 
                //     string selectedWindowName = cmbWindow.SelectedValue.ToString();
 
@@ -484,39 +428,16 @@ namespace fft_writer
                             packet_data_q[i] = -1 * Convert.ToInt32(z + 1);
                         }
                         else packet_data_q[i] = Convert.ToInt32(packet_data_q[i]);
-                        
-                        /*
-                        z = (uint)(packet_data_i[i]);
-                        z = (~z) & 0xffff;
-
-                        if (((z >> 15) & 0x01) == 0x01)
-                        {
-                             packet_data_i[i] = Convert.ToInt32(1 * z) - 65535;
-                        }
-                        else packet_data_i[i] = Convert.ToInt32(1 * z);
-
-                        z = (uint)(packet_data_q[i]);
-                        z = (~z) & 0xffff;
-
-                        if (((z >> 15) & 0x01) == 0x01)
-                        {
-                            packet_data_q[i] = Convert.ToInt32(1 * z) - 65535;
-                        }
-                        else packet_data_q[i] = Convert.ToInt32(1 * z);
-                        */
+          
                         fft_array_x[i] = Convert.ToDouble(packet_data_i[i] - post_U_i); //
                         fft_array_y[i] = Convert.ToDouble(packet_data_q[i] - post_U_q);
               //          Debug.WriteLine("fft_array_x[i]:" + fft_array_x[i]);
               //          Debug.WriteLine("fft_array_y[i]:" + fft_array_y[i]);
-                    }
-
-                  
+                    }                 
 
                     // Instantiate & Initialize the FFT class - это вещественная FFt сейчас не используем.
                     //            DSPLib.FFT fft = new DSPLib.FFT();
-                    //            fft.Initialize(2 * N_temp, zeros);
-
-            
+                    //            fft.Initialize(2 * N_temp, zeros);            
 
                     int k = Convert.ToInt16(LogBase(N_temp, 2));//порядок БПФ
 
@@ -584,7 +505,6 @@ namespace fft_writer
                    
                     Array.Copy(windowedTimeSeries_i, time_series, windowedTimeSeries_i.Length);//
 
-
                     //  Plot Time Series data
                     //       fig2.PlotData(windowedTimeSeries_i);
                     //       fig2.Show();
@@ -606,8 +526,8 @@ namespace fft_writer
                     //        double[] fSpan = fft.FrequencySpan(2 * Fsample);
 
                     // Convert and Plot Log Magnitude
-                    double[] mag = DSP.ConvertComplex.ToMagnitude(cpxResult);
-                    mag = DSP.Math.Multiply(mag, 1);
+                    double[] mag    = DSP.ConvertComplex.ToMagnitude(cpxResult);
+                             mag    = DSP.Math.Multiply(mag, 1);
                     double[] magLog = DSP.ConvertMagnitude.ToMagnitudeDBV(mag);
                     int j;
 
@@ -640,25 +560,25 @@ namespace fft_writer
                     double m2x, m2y;
                     double m3x, m3y;
 
-                    Array.Copy(magLog, m_sort, BUF_N);
+                    Array.Copy(magLog, m_sort, Nbuf);
 
-                    (k_max, A_max) = MAX_f(magLog, BUF_N);       //определяем Х координату первого максимума
+                    (k_max, A_max) = MAX_f(magLog, Nbuf);       //определяем Х координату первого максимума
                     m1x = t[k_max];
                     m1y = A_max;
 
-                    if (BUF_N > 2048) step = (BUF_N / 80) - 20; else step = (BUF_N / 80);
+                    if (Nbuf > 2048) step = (Nbuf / 80) - 20; else step = (Nbuf / 80);
 
                     pstep = step / 2;
 
-                    if (k_max > pstep && k_max < (BUF_N - step)) for (i = 0; i < step; i++) m_sort[k_max + i - pstep] = 0;
+                    if (k_max > pstep && k_max < (Nbuf - step)) for (i = 0; i < step; i++) m_sort[k_max + i - pstep] = 0;
 
-                    (k_max, B_max) = MAX_f(m_sort, BUF_N);      //определяем Х координату второго максимума
+                    (k_max, B_max) = MAX_f(m_sort, Nbuf);      //определяем Х координату второго максимума
                     m2x = t[k_max];
                     m2y = B_max;                                //определяем второй максимум
 
-                    if (k_max > pstep && k_max < (BUF_N - step)) for (i = 0; i < step; i++) m_sort[k_max + i - pstep] = 0;
+                    if (k_max > pstep && k_max < (Nbuf - step)) for (i = 0; i < step; i++) m_sort[k_max + i - pstep] = 0;
 
-                    (k_max, C_max) = MAX_f(m_sort, BUF_N);
+                    (k_max, C_max) = MAX_f(m_sort, Nbuf);
 
                     m3y = C_max;
                     m3x = t[k_max]; ;
@@ -692,15 +612,23 @@ namespace fft_writer
 
         void DISPLAY ()
         {
+            int Nbuf = Convert.ToInt32(text_N_fft.Text);// размер БПФ
+            double[] TSAMPL_tmp = new double[Nbuf];
+            double[] MAG_LOG_tmp = new double[Nbuf];
+            double[] time_series_tmp = new double[Nbuf];
             if (FLAG_DISPAY=="1")
             {
+                Array.Copy(TSAMPL     , TSAMPL_tmp     , Nbuf);
+                Array.Copy(MAG_LOG    , MAG_LOG_tmp    , Nbuf);
+                Array.Copy(time_series, time_series_tmp, Nbuf);
+
                 // Start a Stopwatch
                 Stopwatch stopwatch = new Stopwatch();
                 stopwatch.Start();
-                fig3.PlotData(TSAMPL, MAG_LOG, AMAX, BMAX, CMAX, M1X, M1Y, M2X, M2Y, M3X, M3Y);
+                fig3.PlotData(TSAMPL_tmp, MAG_LOG_tmp, AMAX, BMAX, CMAX, M1X, M1Y, M2X, M2Y, M3X, M3Y);
                 fig3.Show();
                 
-                fig2.PlotData(time_series);
+                fig2.PlotData(time_series_tmp);
                 fig2.Show();
                 FLAG_DISPAY = "";
             }            
@@ -940,7 +868,6 @@ namespace fft_writer
 
 		void Button1Click(object sender, EventArgs e)
 		{
-
             if (_isServerStarted)
             {
                 Stop();
@@ -953,7 +880,6 @@ namespace fft_writer
                 Btn_start.Text = "StopServer";
                 timer1.Enabled = true;
             }
-
         }
 		void Port_enClick(object sender, EventArgs e)
 		{
@@ -1027,8 +953,7 @@ namespace fft_writer
             if (openFileDialog1.ShowDialog()==DialogResult.OK)
             {
                 fileName = openFileDialog1.FileName;
-                text_from_file = File.ReadAllText(fileName);
-   
+                text_from_file = File.ReadAllText(fileName);   
             }
         }
 
@@ -1040,19 +965,9 @@ namespace fft_writer
             int i = 0;
             int k = 0;
             int l = 0;
-            int N_ch=   (Convert.ToInt32(m[0]) <<  8) + (Convert.ToInt32(m[1]) <<  0);
-            //реальное время в пакета (младшие 32 бита , старшие не пересылаем)
-            int time = ((Convert.ToInt32(m[2]) << 24) + (Convert.ToInt32(m[3]) << 16) + (Convert.ToInt32(m[4]) << 8) + (Convert.ToInt32(m[5]) << 0));
-    //        Debug.WriteLine("col=" + col);
-    //        Debug.WriteLine("N_ch=" + N_ch);
-    //        Debug.WriteLine("time=" + time);
-
-
             Array.Clear(data_0_i, 0, BUF_N);
             Array.Clear(data_0_q, 0, BUF_N);
-       //   Debug.WriteLine("M[0]={0:X}",z);
-
-            for (i = 6; i < col; i++)//
+            for (i = 0; i < col; i++)//
             {                      
                     if (k == 0) data_0_i[l] = Convert.ToInt32(m[i])<<8;
                     if (k == 1) data_0_i[l] = data_0_i[l] + Convert.ToInt32(m[i]);
