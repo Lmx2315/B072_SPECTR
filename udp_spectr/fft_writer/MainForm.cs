@@ -58,8 +58,8 @@ namespace fft_writer
 		static int  BUF_N= 64000;//64000
         static int Fsample=12;
 
-		Byte  [] RCV_0         =new byte[64000];
-        Byte  [] RCV_1 = new byte[64000];
+		Byte  [] RCV_0       =new byte[64000];
+        Byte  [] RCV_1       = new byte[64000];
         int   [] FFT_array   =new int [64000];
 	    int   [] packet_data =new int [64000];
         int   [] packet_data_i = new int [64000];
@@ -201,7 +201,7 @@ namespace fft_writer
             }
         }
         string time_strg = "";
-        static int POS_0 = 0;//текущий индекс в массиве обработки 
+        int POS_0 = 0;//текущий индекс в массиве обработки 
         int POS_1 = 0;//текущий индекс в массиве обработки 
         uint REAL_TIME0      = 0;
         uint REAL_TIME0_new  = 0;
@@ -212,12 +212,12 @@ namespace fft_writer
         
         void DATA_COPY ()
         {
-            int Nbuf=Convert.ToInt32(text_N_fft.Text);//считываем размер БПФ
+            while ((true) && (FLAG_THREAD == "start"))
+            {
+                int Nbuf = BUF_N;//считываем размер БПФ
                 Nbuf = Nbuf * 4;
 
-           while ((true) && (FLAG_THREAD == "start"))
-            {
-                    if (FLAG_BUF_SW == 1)
+                if (FLAG_BUF_SW == 1)
                     {
                         sch_packet2++;//счётчик пакетов в вспомогательном треде
                        //считываем время пакета
@@ -229,7 +229,7 @@ namespace fft_writer
                              {                         
                                 Array.Copy(DATA_SW0,6,RCV_0,POS_0, (DATA_SW0.Length-6));//копируем массив отсчётов в массив обработки с текущей позиции
                                 POS_0 = POS_0 + DATA_SW0.Length-6;
-                                    //   Debug.WriteLine("POS_0:"+ POS_0);
+                             //   Debug.WriteLine("POS_0:"+ POS_0);
                                     //   time_strg = time_strg + Convert.ToString(REAL_TIME0_new) + " ";
                                 if (POS_0 > Nbuf)//
                                 {
@@ -253,12 +253,12 @@ namespace fft_writer
         }
         void MSG_collector()
         {
-           int Nbuf = Convert.ToInt32(text_N_fft.Text);// размер БПФ
+           int Nbuf = 4*BUF_N;// так как массив для которого применяется переменная состоит из байтов! т.е. 4 байта на один комплексный отсчёт!
            if (Convert.ToByte(channal_box.Text) == 0) { BUF_convert(RCV_0, Nbuf); }
            if (Convert.ToByte(channal_box.Text) == 1) { BUF_convert(RCV_1, Nbuf); }
 
-            Array.Copy(data_0_i, packet_data_i, Nbuf);//копируем массив отсчётов в форму обработки	
-            Array.Copy(data_0_q, packet_data_q, Nbuf);//копируем массив отсчётов в форму обработки	
+            Array.Copy(data_0_i, packet_data_i, BUF_N);//копируем массив отсчётов в форму обработки	
+            Array.Copy(data_0_q, packet_data_q, BUF_N);//копируем массив отсчётов в форму обработки	
 
             flag_NEW_FFT = 1;//сообщаем форме что пришёл новый массив fft
         }
@@ -279,16 +279,12 @@ namespace fft_writer
         Byte[] cos_gen ()
         {
             Byte[] data = new byte[1446];
-
             int i = 0;
             int n = 0;
             double z = 0;
             int x = 0;
-
             if (sch < 254) sch++; else sch = 0;
-
             i = 6;
-
             data[0] = 0;
             data[1] = 1;
             data[2] = 0;
@@ -302,14 +298,11 @@ namespace fft_writer
                 x = Convert.ToInt16(z);
              //   Debug.WriteLine("x:" + x);
                 data[i  ] = Convert.ToByte((x >> 8) & 0xff);
-                data[i+1] = Convert.ToByte((x >> 0) & 0xff);
-        
+                data[i+1] = Convert.ToByte((x >> 0) & 0xff);        
                 z = 30000 * Math.Cos(2 * Math.PI * i / 20);
                 x = Convert.ToInt16(z);
-
                 data[i+2] = Convert.ToByte((x >> 8) & 0xff);
-                data[i+3] = Convert.ToByte((x >> 0) & 0xff);
-    
+                data[i+3] = Convert.ToByte((x >> 0) & 0xff);    
                 i = i + 4;
             }
             return data;
@@ -387,7 +380,7 @@ namespace fft_writer
                     int pstep = 0;
                     int N_correct = 128;
 
-                    int Nbuf  = Convert.ToInt32(text_N_fft.Text);// размер БПФ
+                    int Nbuf  = BUF_N;// размер БПФ
                     N_temp    = Convert.ToUInt32(Nbuf);
                     N_complex = Convert.ToInt32(Nbuf);
 
@@ -612,7 +605,7 @@ namespace fft_writer
 
         void DISPLAY ()
         {
-            int Nbuf = Convert.ToInt32(text_N_fft.Text);// размер БПФ
+            int Nbuf = BUF_N;// размер БПФ
             double[] TSAMPL_tmp = new double[Nbuf];
             double[] MAG_LOG_tmp = new double[Nbuf];
             double[] time_series_tmp = new double[Nbuf];
@@ -921,8 +914,9 @@ namespace fft_writer
 		void N_fftTextChanged(object sender, EventArgs e)
 		{
             int n = 0;
-            
-            n= Convert.ToInt16(text_N_fft.Text);
+            string txt = text_N_fft.Text;
+            if (txt == "") txt = "0";
+            n= Convert.ToInt16(txt);
             if ((n==64)||(n==128)||(n==256)||(n==512)||(n==1024)||(n==2048)||(n==4096) || (n == 8192))   BUF_N =Convert.ToInt16(text_N_fft.Text);
             //Debug.WriteLine("изменили BUF_N:"+BUF_N);
 		}
