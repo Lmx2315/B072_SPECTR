@@ -209,7 +209,7 @@ namespace fft_writer
         uint REAL_TIME1_new = 0;
         int FLAG_DATA_NEW0;//флаг показывает в каком массиве текущие данные
         int FLAG_DATA_NEW1;//флаг показывает в каком массиве текущие данные
-        
+        byte N_chanel = 0;//номер выводимого канала
         void DATA_COPY ()
         {
             while ((true) && (FLAG_THREAD == "start"))
@@ -219,46 +219,43 @@ namespace fft_writer
 
                 if (FLAG_BUF_SW == 1)
                     {
-                        sch_packet2++;//счётчик пакетов в вспомогательном треде
-                       //считываем время пакета
-                       REAL_TIME0_new =(Convert.ToUInt32(DATA_SW0[2]) << 24) + (Convert.ToUInt32(DATA_SW0[3]) << 16) + (Convert.ToUInt32(DATA_SW0[4]) << 8) + (Convert.ToUInt32(DATA_SW0[5]) << 0);
-
-                        if (REAL_TIME0_new==(REAL_TIME0+1))
+                        if (DATA_SW0[1] == N_chanel)
                         {
-                            if (DATA_SW0[1] == 0)
-                             {                         
-                                Array.Copy(DATA_SW0,6,RCV_0,POS_0, (DATA_SW0.Length-6));//копируем массив отсчётов в массив обработки с текущей позиции
-                                POS_0 = POS_0 + DATA_SW0.Length-6;
-                             //   Debug.WriteLine("POS_0:"+ POS_0);
-                                    //   time_strg = time_strg + Convert.ToString(REAL_TIME0_new) + " ";
+                            sch_packet2++;//счётчик пакетов в вспомогательном треде
+                            //считываем время пакета
+                            REAL_TIME0_new = (Convert.ToUInt32(DATA_SW0[2]) << 24) + (Convert.ToUInt32(DATA_SW0[3]) << 16) + (Convert.ToUInt32(DATA_SW0[4]) << 8) + (Convert.ToUInt32(DATA_SW0[5]) << 0);
+                            if (REAL_TIME0_new == (REAL_TIME0 + 1))
+                            {
+                                Array.Copy(DATA_SW0, 6, RCV_0, POS_0, (DATA_SW0.Length - 6));//копируем массив отсчётов в массив обработки с текущей позиции
+                                POS_0 = POS_0 + DATA_SW0.Length - 6;
+                            //   Debug.WriteLine("POS_0:"+ POS_0);
+                            //   time_strg = time_strg + Convert.ToString(REAL_TIME0_new) + " ";
                                 if (POS_0 > Nbuf)//
                                 {
                                     //  Debug.WriteLine("1");
                                     FLAG_BUF_SW = 2;
                                     FLAG_DATA_NEW0 = 1;
-                                    POS_0 = 0;       
-                                } else FLAG_BUF_SW =0;
-                             }                                
-                            
-                        } else if (DATA_SW0[1] == 0)
-                        {                                               
-                            Array.Clear(RCV_0, 0, RCV_0.Length);
-                            POS_0 = 0;
+                                    POS_0 = 0;
+                                }
+                                else FLAG_BUF_SW = 0;
+                            }   else 
+                                {
+                                    Array.Clear(RCV_0, 0, RCV_0.Length);
+                                    POS_0 = 0;
+                                }
+                            REAL_TIME0 = REAL_TIME0_new;                      
                         }
-                    REAL_TIME0 = REAL_TIME0_new;
-                    if (FLAG_BUF_SW!=2) FLAG_BUF_SW = 0;
-                    }                             
+                    if (FLAG_BUF_SW != 2) FLAG_BUF_SW = 0;
+                    }
                 Thread.Sleep(0);
            }
         }
         void MSG_collector()
         {
            int Nbuf = 4*BUF_N;// так как массив для которого применяется переменная состоит из байтов! т.е. 4 байта на один комплексный отсчёт!
-           if (Convert.ToByte(channal_box.Text) == 0) { BUF_convert(RCV_0, Nbuf); }
-           if (Convert.ToByte(channal_box.Text) == 1) { BUF_convert(RCV_1, Nbuf); }
-
-            Array.Copy(data_0_i, packet_data_i, BUF_N);//копируем массив отсчётов в форму обработки	
-            Array.Copy(data_0_q, packet_data_q, BUF_N);//копируем массив отсчётов в форму обработки	
+           BUF_convert(RCV_0, Nbuf);
+           Array.Copy(data_0_i, packet_data_i, BUF_N);//копируем массив отсчётов в форму обработки	
+           Array.Copy(data_0_q, packet_data_q, BUF_N);//копируем массив отсчётов в форму обработки	
 
             flag_NEW_FFT = 1;//сообщаем форме что пришёл новый массив fft
         }
@@ -1284,6 +1281,14 @@ namespace fft_writer
         private void label7_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void channal_box_TextChanged(object sender, EventArgs e)
+        {
+            byte a = Convert.ToByte(channal_box.Text);
+            if (a == 0) N_chanel = 0;
+            else
+            if (a == 1) N_chanel = 1;
         }
 
         void Kih_load ()

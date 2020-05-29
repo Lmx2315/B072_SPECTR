@@ -312,6 +312,7 @@ namespace fft_writer
             this.channal_box.TabIndex = 22;
             this.channal_box.Text = "0";
             this.channal_box.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.channal_box.TextChanged += new System.EventHandler(this.channal_box_TextChanged);
             // 
             // label7
             // 
