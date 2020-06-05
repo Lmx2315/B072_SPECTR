@@ -252,7 +252,8 @@ namespace fft_writer
             this.dut_ip.Name = "dut_ip";
             this.dut_ip.Size = new System.Drawing.Size(99, 22);
             this.dut_ip.TabIndex = 16;
-            this.dut_ip.Text = "1.3.1.60";
+            this.dut_ip.Text = "1.3.1.61";
+            this.dut_ip.TextChanged += new System.EventHandler(this.dut_ip_TextChanged);
             // 
             // dut_port
             // 

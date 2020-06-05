@@ -254,8 +254,8 @@ namespace fft_writer
         {
            int Nbuf = 4*BUF_N;// так как массив для которого применяется переменная состоит из байтов! т.е. 4 байта на один комплексный отсчёт!
            BUF_convert(RCV_0, Nbuf);
-           Array.Copy(data_0_i, packet_data_i, BUF_N);//копируем массив отсчётов в форму обработки	
-           Array.Copy(data_0_q, packet_data_q, BUF_N);//копируем массив отсчётов в форму обработки	
+           Array.Copy(data_0_i, packet_data_q, BUF_N);//копируем массив отсчётов в форму обработки	
+           Array.Copy(data_0_q, packet_data_i, BUF_N);//копируем массив отсчётов в форму обработки	
 
             flag_NEW_FFT = 1;//сообщаем форме что пришёл новый массив fft
         }
@@ -1289,6 +1289,11 @@ namespace fft_writer
             if (a == 0) N_chanel = 0;
             else
             if (a == 1) N_chanel = 1;
+        }
+
+        private void dut_ip_TextChanged(object sender, EventArgs e)
+        {
+
         }
 
         void Kih_load ()
