@@ -128,7 +128,8 @@ namespace fft_writer
             this.my_port_box.Name = "my_port_box";
             this.my_port_box.Size = new System.Drawing.Size(99, 22);
             this.my_port_box.TabIndex = 0;
-            this.my_port_box.Text = "139";
+            this.my_port_box.Text = "703";
+            this.my_port_box.TextChanged += new System.EventHandler(this.my_port_box_TextChanged);
             // 
             // Btn_start
             // 

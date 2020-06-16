@@ -42,7 +42,6 @@ namespace fft_writer
 			InitializeComponent();
 			Debug.WriteLine("Debug Information-Product Starting ");
 			Debug.WriteLine("------------------------ ");
-
 		}
         //----------ETH------------
         UdpClient _server    = null;
@@ -58,13 +57,13 @@ namespace fft_writer
 		static int  BUF_N= 64000;//64000
         static int Fsample=12;
 
-		Byte  [] RCV_0       =new byte[64000];
-        Byte  [] RCV_1       = new byte[64000];
-        int   [] FFT_array   =new int [64000];
-	    int   [] packet_data =new int [64000];
-        int   [] packet_data_i = new int [64000];
-        int   [] packet_data_q = new int [64000];
-        Byte  [] rcv_BUF     =new byte[64000];
+		Byte  [] RCV_0         =new byte[64000];
+        Byte  [] RCV_1         =new byte[64000];
+        int   [] FFT_array     =new int [64000];
+	    int   [] packet_data   =new int [64000];
+        int   [] packet_data_i =new int [64000];
+        int   [] packet_data_q =new int [64000];
+        Byte  [] rcv_BUF       =new byte[64000];
         double B_win = 1;
   
 		int flag_NEW_FFT;
@@ -81,9 +80,9 @@ namespace fft_writer
 
         string selectedWindowName;
 
-         Plot fig1 = new Plot(100,"I Input", "Sample", "Вольт","","","","","");
+         Plot  fig1 = new Plot(100,"I Input", "Sample", "Вольт","","","","","");
 	     Plot3 fig2 = new Plot3("time","x","y");
-		 Plot fig3 = new Plot(85,"FFT (dBV)", "кГц", "Mag (dBV)","","","","","");
+		 Plot  fig3 = new Plot(90,"FFT (dBV)", "кГц", "Mag (dBV)","","","","","");
         
 
         private void MainForm_FormClosing(Object sender, FormClosingEventArgs e)
@@ -350,9 +349,9 @@ namespace fft_writer
 
         string FLAG_DISPAY = "";
         double  AMAX, BMAX, CMAX, M1X, M1Y, M2X, M2Y, M3X, M3Y;
-        double [] TSAMPL  = new double[4096];
-        double [] MAG_LOG = new double[4096];
-        double [] time_series = new double[4096];
+        double [] TSAMPL      = new double[8192];
+        double [] MAG_LOG     = new double[8192];
+        double [] time_series = new double[8192];
 
         double H_a = 0;//максимальный уровень сигнала в спектре
         double H_b = 0;//вторая максимальная гармоника в спектре
@@ -526,7 +525,7 @@ namespace fft_writer
                         //	 A[j] = magLog[j];
                         if (j < (N_temp / 2)) A[j] = magLog[j + (N_temp / 2)];
                         if (j > ((N_temp / 2) - 1)) A[j] = magLog[j - (N_temp / 2)];
-                        t[j] = -3121 + (6250 * j / (N_temp));//важно сначала умножить а потом поделить!!!! атоноль
+                        t[j] = -6000 + (12000 * j / (N_temp));//важно сначала умножить а потом поделить!!!! атоноль
                                                              // Debug.WriteLine("t[]:"+t[j]);
                     }
 
@@ -603,8 +602,8 @@ namespace fft_writer
         void DISPLAY ()
         {
             int Nbuf = BUF_N;// размер БПФ
-            double[] TSAMPL_tmp = new double[Nbuf];
-            double[] MAG_LOG_tmp = new double[Nbuf];
+            double[] TSAMPL_tmp      = new double[Nbuf];
+            double[] MAG_LOG_tmp     = new double[Nbuf];
             double[] time_series_tmp = new double[Nbuf];
             if (FLAG_DISPAY=="1")
             {
@@ -887,11 +886,8 @@ namespace fft_writer
         	string filename = saveFileDialog1.FileName;
         	// сохраняем текст в файл
         	System.IO.File.WriteAllText(filename, Console1.Text);
-        	//MessageBox.Show("Файл сохранен");
-		    
+        	//MessageBox.Show("Файл сохранен");		    
 		}
-
-
 		void array_save (int [] a,int N)
 		{
 			string text="";
@@ -1296,6 +1292,11 @@ namespace fft_writer
 
         }
 
+        private void my_port_box_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
         void Kih_load ()
         {
             int i = 0;
@@ -1462,10 +1463,8 @@ namespace fft_writer
                 catch
                 {
 
-                }
-                
-            }
-            
+                }                
+            }            
         }
 
         int find_number (int freq,double [] m)//ищет ближайший порядковый номер в массиве частот
@@ -1589,11 +1588,8 @@ namespace fft_writer
             else
             {
 
-            }
-           
-            
+            }           
         }
-
         private void btn_ach_control_Click(object sender, EventArgs e)
         {
 

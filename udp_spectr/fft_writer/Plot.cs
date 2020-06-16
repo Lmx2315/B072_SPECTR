@@ -66,8 +66,8 @@ namespace PlotWrapper
             this.Text = mTitle;
             chart1.Titles["AxisX"].Text = mAxisX; 
             chart1.Titles["AxisY"].Text = mAxisY;
-            chart1.ChartAreas["ChartArea1"].AxisX.Minimum = -3125;
-            chart1.ChartAreas["ChartArea1"].AxisX.Maximum =  3125;
+            chart1.ChartAreas["ChartArea1"].AxisX.Minimum = -6000;
+            chart1.ChartAreas["ChartArea1"].AxisX.Maximum =  6000;
             chart1.ChartAreas["ChartArea1"].AxisY.Maximum = mMax;
 
             chart1.Titles["DB0"].Text = mDB0;
@@ -78,9 +78,7 @@ namespace PlotWrapper
 
             // Enable zooming
             chart1.ChartAreas[0].CursorX.IsUserSelectionEnabled = true;
-            chart1.ChartAreas[0].CursorY.IsUserSelectionEnabled = true;
-
-         
+            chart1.ChartAreas[0].CursorY.IsUserSelectionEnabled = true;         
         }
 
         // Line chart
