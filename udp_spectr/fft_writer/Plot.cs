@@ -70,6 +70,9 @@ namespace PlotWrapper
             chart1.ChartAreas["ChartArea1"].AxisX.Maximum =  6000;
             chart1.ChartAreas["ChartArea1"].AxisY.Maximum = mMax;
 
+            chart1.ChartAreas[0].AxisY.Interval = 10;
+            chart1.ChartAreas[0].AxisX.Interval = 250;
+
             chart1.Titles["DB0"].Text = mDB0;
             chart1.Titles["DB1"].Text = mDB1;
             chart1.Titles["DB2"].Text = mDB2;

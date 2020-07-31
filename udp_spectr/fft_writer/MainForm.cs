@@ -101,8 +101,11 @@ namespace fft_writer
             {
                 e.Cancel = true;
             }
+            if (_listenThread != null) _listenThread.Abort();
+            if (_copyThread != null) _copyThread.Abort();
+            if (_fftThread != null) _fftThread.Abort();
 
-          if (_isServerStarted)   _server.Close();
+            if (_isServerStarted)   _server.Close();
             //Changet state to indicate the server stops.
             _isServerStarted = false;
         }
