@@ -128,7 +128,7 @@ namespace fft_writer
             this.my_port_box.Name = "my_port_box";
             this.my_port_box.Size = new System.Drawing.Size(99, 22);
             this.my_port_box.TabIndex = 0;
-            this.my_port_box.Text = "703";
+            this.my_port_box.Text = "139";
             this.my_port_box.TextChanged += new System.EventHandler(this.my_port_box_TextChanged);
             // 
             // Btn_start
@@ -214,7 +214,7 @@ namespace fft_writer
             this.text_N_fft.Name = "text_N_fft";
             this.text_N_fft.Size = new System.Drawing.Size(132, 22);
             this.text_N_fft.TabIndex = 11;
-            this.text_N_fft.Text = "1024";
+            this.text_N_fft.Text = "4096";
             this.text_N_fft.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.text_N_fft.TextChanged += new System.EventHandler(this.N_fftTextChanged);
             // 
@@ -784,7 +784,7 @@ namespace fft_writer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1050, 528);
+            this.ClientSize = new System.Drawing.Size(832, 528);
             this.Controls.Add(this.textBox2_sch);
             this.Controls.Add(this.label32);
             this.Controls.Add(this.label31);
