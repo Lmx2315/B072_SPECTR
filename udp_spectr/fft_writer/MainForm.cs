@@ -313,12 +313,12 @@ namespace fft_writer
             if (FLAG_DATA_NEW0 ==1)
             {
                 selectedWindowName = cmbWindow.SelectedValue.ToString();//выбираем тип окна для БПФ
-              //Debug.WriteLine("*");
+               
                 MSG_collector();
                 FLAG_DATA_NEW0 = 0;
                 FLAG_BUF_SW = 0;
             }
-
+           // Debug.WriteLine("*");
             DISPLAY();
             textBox_sch.Text = Convert.ToString(sch_packet);  //тут сколько пакетов принято
             sch_packet = 0;
@@ -376,11 +376,13 @@ namespace fft_writer
                 MeMi[i] = new double[BUF_MAX];//формируем зубчатый массив памяти
                 MeMq[i] = new double[BUF_MAX];//формируем зубчатый массив памяти
             }
-
+            
             while ((true) && (FLAG_THREAD == "start"))
             {
+                
                 if (flag_NEW_FFT == 1)
                 {
+                    Debug.WriteLine(".");
                     flag_NEW_FFT = 0;
                     UInt32 zeros = Convert.ToUInt32(0);
                     uint N_temp;
@@ -648,7 +650,7 @@ namespace fft_writer
                 Array.Copy(TSAMPL     , TSAMPL_tmp     , Nbuf);
                 Array.Copy(MAG_LOG    , MAG_LOG_tmp    , Nbuf);
                 Array.Copy(time_series, time_series_tmp, Nbuf);
-
+                Debug.WriteLine("*");
                 // Start a Stopwatch
                 Stopwatch stopwatch = new Stopwatch();
                 stopwatch.Start();
