@@ -128,7 +128,7 @@ namespace fft_writer
             this.my_port_box.Name = "my_port_box";
             this.my_port_box.Size = new System.Drawing.Size(99, 22);
             this.my_port_box.TabIndex = 0;
-            this.my_port_box.Text = "139";
+            this.my_port_box.Text = "140";
             this.my_port_box.TextChanged += new System.EventHandler(this.my_port_box_TextChanged);
             // 
             // Btn_start
@@ -729,6 +729,7 @@ namespace fft_writer
             this.label_test.Text = "режим ТЕСТ";
             this.label_test.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.label_test.Visible = false;
+            this.label_test.Click += new System.EventHandler(this.label_test_Click);
             // 
             // textBox_error_ach
             // 

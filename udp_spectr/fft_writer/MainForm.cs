@@ -105,7 +105,6 @@ namespace fft_writer
             if (_listenThread != null) _listenThread.Abort();
             if (_copyThread != null) _copyThread.Abort();
             if (_fftThread != null) _fftThread.Abort();
-
             if (_isServerStarted)   _server.Close();
             //Changet state to indicate the server stops.
             _isServerStarted = false;
@@ -134,14 +133,17 @@ namespace fft_writer
             //Start listening.
             Thread _listenThread = new Thread(new ThreadStart(Listening));//тред приёма данных по UDP
                    _listenThread.Start();
+                   _listenThread.IsBackground = true;//делает поток фоновым который завершается по закрытию основного приложения
 
             //Start copy-ing.
             Thread _copyThread = new Thread(new ThreadStart(DATA_COPY));//тред копирования данных в буфер обработки
                    _copyThread.Start();
+            _copyThread.IsBackground = true;
 
             //Start fft-ing.
               Thread _fftThread = new Thread(new ThreadStart(fft_out));//тред расчёта fft
-              _fftThread.Start();           
+              _fftThread.Start();
+            _fftThread.IsBackground = true;
 
             //Change state to indicate the server starts.
             _isServerStarted = true;
@@ -382,7 +384,7 @@ namespace fft_writer
                 
                 if (flag_NEW_FFT == 1)
                 {
-                    Debug.WriteLine(".");
+                    //Debug.WriteLine(".");
                     flag_NEW_FFT = 0;
                     UInt32 zeros = Convert.ToUInt32(0);
                     uint N_temp;
@@ -620,6 +622,22 @@ namespace fft_writer
                 }
                 Thread.Sleep(0);
             }
+        }
+
+        double FILTR_MEDIANA(double[] M) //M - массив входных отсчётов
+        {
+            Array.Sort(M);
+            int k = (M.Length) / 2; //средний элемент массива
+            return M[k];    //возвращаем медианное значение
+        }
+
+        //фильтр - среднее
+        double FILTR_MAT(double[] M) //M - массив входных отсчётов
+        {
+            double z = 0;
+            for (var i = 0; i < M.Length; i++) z = z + M[i];
+            z = z / M.Length;
+            return z;    //возвращаем среднее значение
         }
 
         void filtr_usr2(double[] data, double[][] a, int k)//входные данные, входной зубчатый массив памяти (в нулевом массиве текущий массив данных )и глубина усреднения
@@ -1333,6 +1351,11 @@ namespace fft_writer
         }
 
         private void my_port_box_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label_test_Click(object sender, EventArgs e)
         {
 
         }

@@ -82,3 +82,15 @@ C:\Work_murmansk\Quartus\B072_SPECTR\udp_spectr\fft_writer\bin\Debug\fft_writer.
 C:\Work_murmansk\Quartus\B072_SPECTR\udp_spectr\fft_writer\bin\Debug\fft_writer.exe
 C:\Work_murmansk\Quartus\B072_SPECTR\udp_spectr\fft_writer\bin\Debug\fft_writer.pdb
 C:\Work_murmansk\Quartus\B072_SPECTR\udp_spectr\fft_writer\obj\Debug\PlotWrapper.Plot3.resources
+C:\Work_murmansk\SOFT_comp\B072_SPECTR\udp_spectr\fft_writer\bin\Debug\fft_writer.exe.config
+C:\Work_murmansk\SOFT_comp\B072_SPECTR\udp_spectr\fft_writer\bin\Debug\fft_writer.exe
+C:\Work_murmansk\SOFT_comp\B072_SPECTR\udp_spectr\fft_writer\bin\Debug\fft_writer.pdb
+C:\Work_murmansk\SOFT_comp\B072_SPECTR\udp_spectr\fft_writer\obj\Debug\fft_writer.csprojAssemblyReference.cache
+C:\Work_murmansk\SOFT_comp\B072_SPECTR\udp_spectr\fft_writer\obj\Debug\fft_writer.Form1.resources
+C:\Work_murmansk\SOFT_comp\B072_SPECTR\udp_spectr\fft_writer\obj\Debug\fft_writer.MainForm.resources
+C:\Work_murmansk\SOFT_comp\B072_SPECTR\udp_spectr\fft_writer\obj\Debug\PlotWrapper.Plot.resources
+C:\Work_murmansk\SOFT_comp\B072_SPECTR\udp_spectr\fft_writer\obj\Debug\PlotWrapper.Plot3.resources
+C:\Work_murmansk\SOFT_comp\B072_SPECTR\udp_spectr\fft_writer\obj\Debug\fft_writer.csproj.GenerateResource.cache
+C:\Work_murmansk\SOFT_comp\B072_SPECTR\udp_spectr\fft_writer\obj\Debug\fft_writer.csproj.CoreCompileInputs.cache
+C:\Work_murmansk\SOFT_comp\B072_SPECTR\udp_spectr\fft_writer\obj\Debug\fft_writer.exe
+C:\Work_murmansk\SOFT_comp\B072_SPECTR\udp_spectr\fft_writer\obj\Debug\fft_writer.pdb
