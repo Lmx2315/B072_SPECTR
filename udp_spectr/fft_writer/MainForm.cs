@@ -47,7 +47,7 @@ namespace fft_writer
         UdpClient _server    = null;
         IPEndPoint _client   = null;
         Thread _listenThread = null;
-        Thread _copyThread   = null;
+        Thread _copy0Thread   = null;
         Thread _fftThread    = null;
         private bool _isServerStarted = false;
 
@@ -73,6 +73,8 @@ namespace fft_writer
         double filtr = 0;
         int sch_packet  = 0;
         int sch_packet2 = 0;
+        int sch_N0 = 0;
+        int sch_N1 = 0;
         int FLAG_filtr = 0;
 
         string fileName;
@@ -84,7 +86,10 @@ namespace fft_writer
          Plot  fig1 = new Plot(100,"I Input", "Sample", "Вольт","","","","","");
 	     Plot3 fig2 = new Plot3("time","x","y");
 		 Plot  fig3 = new Plot(90,"FFT (dBV)", "кГц", "Mag (dBV)","","","","","");
-        
+
+        static int BUF_ETH = 64;
+        List<byte[]> _data = new List<byte[]>(BUF_ETH);
+        byte[] UDP_packet = new byte[1446];
 
         private void MainForm_FormClosing(Object sender, FormClosingEventArgs e)
         {
@@ -103,7 +108,7 @@ namespace fft_writer
                 e.Cancel = true;
             }
             if (_listenThread != null) _listenThread.Abort();
-            if (_copyThread != null) _copyThread.Abort();
+            if (_copy0Thread != null) _copy0Thread.Abort();
             if (_fftThread != null) _fftThread.Abort();
             if (_isServerStarted)   _server.Close();
             //Changet state to indicate the server stops.
@@ -125,7 +130,7 @@ namespace fft_writer
             // IPEndPoint serverEnd = new IPEndPoint(IPAddress.Any, 1234);
 
             _server = new UdpClient(serverEnd);
-            _server.Client.ReceiveBufferSize = 8192 * 50;//увеличиваем размер приёмного буфера!!!
+            _server.Client.ReceiveBufferSize = 8192 * 100;//увеличиваем размер приёмного буфера!!!
             Debug.WriteLine("Waiting for a client...");
             //Create the client end.
             //_client = new IPEndPoint(IPAddress.Any, 0);
@@ -136,12 +141,12 @@ namespace fft_writer
                    _listenThread.IsBackground = true;//делает поток фоновым который завершается по закрытию основного приложения
 
             //Start copy-ing.
-            Thread _copyThread = new Thread(new ThreadStart(DATA_COPY));//тред копирования данных в буфер обработки
-                   _copyThread.Start();
-            _copyThread.IsBackground = true;
+            Thread _copy0Thread = new Thread(new ThreadStart(DATA_COPY0));//тред копирования данных в буфер обработки
+                   _copy0Thread.Start();
+            _copy0Thread.IsBackground = true;
 
             //Start fft-ing.
-              Thread _fftThread = new Thread(new ThreadStart(fft_out));//тред расчёта fft
+            Thread _fftThread = new Thread(new ThreadStart(fft_out));//тред расчёта fft
               _fftThread.Start();
             _fftThread.IsBackground = true;
 
@@ -169,7 +174,7 @@ namespace fft_writer
                 _listenThread.Join();
                 _server.Close();
                 _isServerStarted = false;
-                _copyThread.Join();
+                _copy0Thread.Join();
                 _fftThread.Join();
             }
             catch (Exception excp)
@@ -183,9 +188,11 @@ namespace fft_writer
         int DATA_size = 32000;
         byte[] DATA_SW0;//буфер0 приёма данных с шины SW
         byte[] DATA_SW1;//буфер1 приёма данных с шины SW
-       static UInt16 FLAG_BUF_SW = 0;
+        static UInt16 FLAG_BUF_SW = 0;
+        
+        int INDEX = 1;
         private void Listening()
-        {           
+        {
             //Listening loop.
             while ((true)&&(FLAG_THREAD=="start"))
             {
@@ -194,15 +201,20 @@ namespace fft_writer
                 { //receieve a message form a client.
                     if (FLAG_BUF_SW == 0)  //тут висим пока не приходят данные
                     {
-                        DATA_SW0 = _server.Receive(ref _client);
-                        FLAG_BUF_SW = 1;
+                        _data[INDEX] = _server.Receive(ref _client);
+                        if (INDEX < (BUF_ETH - 1)) INDEX = INDEX + 1;
+                        else
+                        {
+                            INDEX = 0;
+                            FLAG_BUF_SW = 1;
+                        }
+                        sch_packet++;
                     }                   
                 }
                 catch (Exception excp)
                 {
                     Console.WriteLine(excp.Message);
-                }
-                sch_packet++;
+                }                
             }
         }
         string time_strg = "";
@@ -215,47 +227,62 @@ namespace fft_writer
         int FLAG_DATA_NEW0;//флаг показывает в каком массиве текущие данные
         int FLAG_DATA_NEW1;//флаг показывает в каком массиве текущие данные
         byte N_chanel = 0;//номер выводимого канала
-        void DATA_COPY ()
-        {
+        void DATA_COPY0 ()
+        {            
             while ((true) && (FLAG_THREAD == "start"))
             {
                 int Nbuf = BUF_N;//считываем размер БПФ
                 Nbuf = Nbuf * 4;
 
-                if (FLAG_BUF_SW == 1)
+                lock(_data)
+                {
+                    if (FLAG_BUF_SW == 1)
                     {
-                        if (DATA_SW0[1] == N_chanel)
+                        for (int i = 0; i < (BUF_ETH - 1); i++)
                         {
-                            sch_packet2++;//счётчик пакетов в вспомогательном треде
-                            //считываем время пакета
-                            REAL_TIME0_new = (Convert.ToUInt32(DATA_SW0[2]) << 24) + (Convert.ToUInt32(DATA_SW0[3]) << 16) + (Convert.ToUInt32(DATA_SW0[4]) << 8) + (Convert.ToUInt32(DATA_SW0[5]) << 0);
-                            if (REAL_TIME0_new == (REAL_TIME0 + 1))
+                            DATA_SW0 = _data[i];
+                            if (DATA_SW0[1] == N_chanel)
                             {
-                                Array.Copy(DATA_SW0, 6, RCV_0, POS_0, (DATA_SW0.Length - 6));//копируем массив отсчётов в массив обработки с текущей позиции
-                                POS_0 = POS_0 + DATA_SW0.Length - 6;
-                            //   Debug.WriteLine("POS_0:"+ POS_0);
-                            //   time_strg = time_strg + Convert.ToString(REAL_TIME0_new) + " ";
-                                if (POS_0 > Nbuf)//
+                                sch_packet2++;//счётчик пакетов в вспомогательном треде
+                                              //считываем время пакета
+                                REAL_TIME0_new = (Convert.ToUInt32(DATA_SW0[2]) << 24) + (Convert.ToUInt32(DATA_SW0[3]) << 16) + (Convert.ToUInt32(DATA_SW0[4]) << 8) + (Convert.ToUInt32(DATA_SW0[5]) << 0);
+                                if (REAL_TIME0_new == (REAL_TIME0 + 1))
                                 {
-                                    //  Debug.WriteLine("1");
-                                    FLAG_BUF_SW = 2;
-                                    FLAG_DATA_NEW0 = 1;
-                                    POS_0 = 0;
+                                    Array.Copy(DATA_SW0, 6, RCV_0, POS_0, (DATA_SW0.Length - 6));//копируем массив отсчётов в массив обработки с текущей позиции
+                                    POS_0 = POS_0 + DATA_SW0.Length - 6;
+  
+                                    if (POS_0 > Nbuf)//
+                                    {
+                                        if (N_chanel == 0) sch_N0 = sch_packet2;
+                                        if (N_chanel == 1) sch_N1 = sch_packet2;
+
+                                        REAL_TIME0 = 0;
+                                        FLAG_BUF_SW = 2;
+                                        FLAG_DATA_NEW0 = 1;
+                                        POS_0 = 0;
+                                        break;
+                                    }
+                                    else FLAG_BUF_SW = 0;
                                 }
-                                else FLAG_BUF_SW = 0;
-                            }   else 
+                                else
                                 {
-                                    Array.Clear(RCV_0, 0, RCV_0.Length);
-                                    POS_0 = 0;
+                                  POS_0 = 0;
                                 }
-                            REAL_TIME0 = REAL_TIME0_new;                      
+                                REAL_TIME0 = REAL_TIME0_new;
+                            }
+
                         }
-                    if (FLAG_BUF_SW != 2) FLAG_BUF_SW = 0;
+
+                        if (FLAG_BUF_SW != 2) FLAG_BUF_SW = 0;
                     }
+                }
+                
                 Thread.Sleep(0);
            }
+           
         }
-        void MSG_collector()
+
+          void MSG_collector()
         {
            int Nbuf = 4*BUF_N;// так как массив для которого применяется переменная состоит из байтов! т.е. 4 байта на один комплексный отсчёт!
            BUF_convert(RCV_0, Nbuf);
@@ -326,19 +353,26 @@ namespace fft_writer
             sch_packet = 0;
             textBox2_sch.Text = Convert.ToString(sch_packet2);//тут сколько обработано
             sch_packet2 = 0;
+
+            textBox_N0.Text = Convert.ToString(sch_N0);
+           // sch_N0 = 0;
+            textBox_N1.Text = Convert.ToString(sch_N1);
+           // sch_N1 = 0;
             richTextBox1.Text = richTextBox1.Text + time_strg;
             time_strg = "";
             filtr = 12000 / BUF_N * B_win;
             label8.Text = "полоса фильтра:" + Convert.ToString(filtr) + "кГц";
         }
 
-    
-		void MainFormLoad(object sender, EventArgs e)
+
+        void MainFormLoad(object sender, EventArgs e)
 		{
 			//fft_form.Show(this);
 			BUF_N =Convert.ToInt16(text_N_fft.Text);
 			// Load window combo box with the Window Names (from ENUMS)
             cmbWindow.DataSource = Enum.GetNames(typeof(DSPLib.DSP.Window.Type));
+
+            for (int i = 0; i < BUF_ETH; i++) _data.Add(UDP_packet);
 #if TEST
             label_test.Visible = true;
 #endif
@@ -668,7 +702,7 @@ namespace fft_writer
                 Array.Copy(TSAMPL     , TSAMPL_tmp     , Nbuf);
                 Array.Copy(MAG_LOG    , MAG_LOG_tmp    , Nbuf);
                 Array.Copy(time_series, time_series_tmp, Nbuf);
-                Debug.WriteLine("*");
+                // Debug.WriteLine("*");
                 // Start a Stopwatch
                 Stopwatch stopwatch = new Stopwatch();
                 stopwatch.Start();

@@ -119,6 +119,8 @@ namespace fft_writer
             this.label31 = new System.Windows.Forms.Label();
             this.label32 = new System.Windows.Forms.Label();
             this.textBox2_sch = new System.Windows.Forms.TextBox();
+            this.textBox_N1 = new System.Windows.Forms.TextBox();
+            this.textBox_N0 = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // my_port_box
@@ -773,7 +775,7 @@ namespace fft_writer
             // 
             // textBox2_sch
             // 
-            this.textBox2_sch.Location = new System.Drawing.Point(137, 423);
+            this.textBox2_sch.Location = new System.Drawing.Point(30, 453);
             this.textBox2_sch.Margin = new System.Windows.Forms.Padding(4);
             this.textBox2_sch.Name = "textBox2_sch";
             this.textBox2_sch.Size = new System.Drawing.Size(99, 22);
@@ -781,11 +783,33 @@ namespace fft_writer
             this.textBox2_sch.Text = "1";
             this.textBox2_sch.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
+            // textBox_N1
+            // 
+            this.textBox_N1.Location = new System.Drawing.Point(137, 453);
+            this.textBox_N1.Margin = new System.Windows.Forms.Padding(4);
+            this.textBox_N1.Name = "textBox_N1";
+            this.textBox_N1.Size = new System.Drawing.Size(99, 22);
+            this.textBox_N1.TabIndex = 77;
+            this.textBox_N1.Text = "1";
+            this.textBox_N1.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
+            // textBox_N0
+            // 
+            this.textBox_N0.Location = new System.Drawing.Point(136, 423);
+            this.textBox_N0.Margin = new System.Windows.Forms.Padding(4);
+            this.textBox_N0.Name = "textBox_N0";
+            this.textBox_N0.Size = new System.Drawing.Size(99, 22);
+            this.textBox_N0.TabIndex = 78;
+            this.textBox_N0.Text = "1";
+            this.textBox_N0.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(832, 528);
+            this.Controls.Add(this.textBox_N0);
+            this.Controls.Add(this.textBox_N1);
             this.Controls.Add(this.textBox2_sch);
             this.Controls.Add(this.label32);
             this.Controls.Add(this.label31);
@@ -916,5 +940,7 @@ namespace fft_writer
         private System.Windows.Forms.Label label31;
         private System.Windows.Forms.Label label32;
         private System.Windows.Forms.TextBox textBox2_sch;
+        private System.Windows.Forms.TextBox textBox_N1;
+        private System.Windows.Forms.TextBox textBox_N0;
     }
 }
