@@ -130,7 +130,7 @@ namespace fft_writer
             // IPEndPoint serverEnd = new IPEndPoint(IPAddress.Any, 1234);
 
             _server = new UdpClient(serverEnd);
-            _server.Client.ReceiveBufferSize = 8192 * 100;//увеличиваем размер приёмного буфера!!!
+            _server.Client.ReceiveBufferSize = 1000000;//увеличиваем размер приёмного буфера!!!
             Debug.WriteLine("Waiting for a client...");
             //Create the client end.
             //_client = new IPEndPoint(IPAddress.Any, 0);
@@ -190,7 +190,7 @@ namespace fft_writer
         byte[] DATA_SW1;//буфер1 приёма данных с шины SW
         static UInt16 FLAG_BUF_SW = 0;
         
-        int INDEX = 1;
+        int INDEX = 0;
         private void Listening()
         {
             //Listening loop.
